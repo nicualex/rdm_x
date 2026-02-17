@@ -1,0 +1,86 @@
+,,Command Class,PID (hexadecimal value),Purpose,Payload Length,Description,Available modes,,,Valid Range,,Settings,,,Notes,Included in RDM SUPPORTED_PARAMETERS (PID 0x0050)?
+,Vaya Must have,,,,,,Mfg. Locked (Operation),Mfg. Unlocked (Admin),Bootloader,Minimum,Maximum,FW Defaults,Test Values,Shipping/ Stock Values,,
+,,,0000,(reserved) - pad byte,,,,,,,,,,,,
+,Y,DISCOVERY_COMMAND (0X10),0001,RDM Discover Unique Branch,,See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,Y,DISCOVERY_COMMAND (0X10),0002,RDM Discover Mute,,See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,Y,DISCOVERY_COMMAND (0X10),0003,RDM Discover Unmute,,See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,Y,GET_COMMAND (0x20),0050,Get supported parameters list,"Variable, see RDM standard",See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,Y,GET_COMMAND (0x20),0051,Get supported parameters description,"Variable, see RDM standard",See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,Y,GET_COMMAND (0x20),0060,Get RDM Device Info,19 bytes,"See RDM Standard
+Returns the following values:
+- Protocol version (top 2 bytes) - fixed value of 0x0100 for RDM
+- Device Model ID (next 2 bytes) [from PID 0x8070]
+- Product Category (next 2 bytes) [from PID 0x8070]
+- SFT Version (next 4 bytes) [from PID 0x80C0]
+- Channel count (next 2 bytes)
+- Device personality (next 2 bytes) [from PID 0x00E0]
+- Device start address (next 2 bytes) [from PID 0x00F0]
+- Sub-device count (next 2 bytes) - fixed value of 0x0000
+- Sensor count (bottom byte) - Devices which do not suport opcode 0x0200 return a fixed value of 0x00",O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
+,,GET_COMMAND (0x20),0080,Get RDM Device Model Description,"Variable, see RDM standard",See RDM Standard,O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,SET_COMMAND (0x30),0080,Set RDM Device Model Description,"Variable, see RDM standard",See RDM Standard,,A,,See RDM standard,See RDM standard,,,,,Yes
+,Y,GET_COMMAND (0x20),00C0,Get SFT version label,"Variable, see RDM standard","See RDM standard.
+Returns a human-readable, ASCII-encoded, software version string in the following format:
+SFT-012345-67 A:89 B:12
+where A: is the application software version and B: is the bootloader version
+The string returned is the same as the software version string returned by KiNET discovery",O,A,B,See RDM standard,See RDM standard,,,,,No per RDM standard
+,,GET_COMMAND (0x20),00E0,Get Device Personality,,See RDM Standard,O,A,,0x01,0x02,,,0x01,,Yes
+,,SET_COMMAND (0x30),00E0,Set Device Personality,,See RDM Standard,O,A,,0x01,0x02,,,,,Yes
+,,GET_COMMAND (0x20),00E1,Get DMX Personality Description,"Variable, see RDM standard",See RDM standard,O,A,,See RDM standard,See RDM standard,,,,,Yes
+,Y,GET_COMMAND (0x20),00F0,Get node light index,2 byte,"Returns the byte index of the light data packet that corresponds to the first fixture LED channel.  For compatibility with DMX addresses, an index of 1 corresponds to the first byte in the light data packet.  As an example, a fixture with a node light index of 0x04 would ignore the first 3 bytes of light data, and start reading light data beginning with the 4th byte.  A node light index of 0 is undefined.",O,A,,0x0001,0x0200,0x0001,0x0001,0x0001,,No per RDM standard
+,Y,SET_COMMAND (0x30),00F0,Set node light index,2 byte,,O,A,,0x0001,0x0200,,,,,No per RDM standard
+,,GET_COMMAND (0x20),0200,Get sensor definition,"Variable, see RDM standard","See sensor table for list of sensors and descriptions.  ""Normal"" minima and maxima are not defined; -32768 and 32767 should be returned for the normal minium and normal maximum respectively",O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,GET_COMMAND (0x20),0201,Get sensor data,"Variable, see RDM standard","See RDM standard for format, and see sensor table for sensor list.  ""Recorded value"" is not supported",O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,SET_COMMAND (0x30),0201,Reset sensor data,"Variable, see RDM standard","See RDM standard for format, and see sensor table for sensor list.  ""Recorded value"" is not supported",O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,GET_COMMAND (0x20),0400,Get Device Hours,4 bytes,See RDM Standard,,A,,0x00000000,0xFFFFFFFF,,,,,Yes
+,,SET_COMMAND (0x30),0400,Set Device Hours,4 bytes,This parameter is used to set the number of hours of operation the device has been in use. Only allow to set to 0x00000000 before manufacturing lock enabling.,,A,,0x00000000,0xFFFFFFFF,,,,,Yes
+,Y,GET_COMMAND (0x20),1000,Get Identify Device State,1 byte,"Returns the state of device identify for the device.  The following states are defined: 
+- 0x00 (identify off)
+- 0x01 (identify active)",O,A,B,0x00,0x01,,,,,No per RDM standard
+,Y,SET_COMMAND (0x30),1000,Set Identify Device State,,Sets the state of device identify for the device,O,A,B,0x00,0x01,,,,,No per RDM standard
+,Y,GET_COMMAND (0x20),8060,Get serial number,6 byte,"Returns the device serial number, a globally unique identifier.  ",O,A,,0x434B00000000,0x434BFFFFFFFF,,,,,No
+,Y,SET_COMMAND (0x30),8060,Set serial number,6 byte,,,A,,0x434B00000000,0x434BFFFFFFFF,,,,,No
+,Y,GET_COMMAND (0x20),8070,Get device type,4 byte,"Returns the device type.  The device type is a 32-bit field constructed from the following 2 16-bit properties:
+- Device Model ID (high 16 bits)
+- Product Category (low 16 bits)",O,A,,0x00000000,0xFFFFFFFF,,,,GET mode of this PID is deprecated; use 0x0060,No
+,Y,SET_COMMAND (0x30),8070,Set device type,4 byte,,,A,,0x00000000,0xFFFFFFFF,,,,,No
+,Y,GET_COMMAND (0x20),8072,Get device SKU,Variable length up to 32 bytes,"Returns product top-level SKU, maximum of 32 characters  Format is ASCII, with characters padded to 8 bits with a 0 as the MSB.",O,A,,,,,,,,Yes
+,,SET_COMMAND (0x30),8072,Set device SKU,Variable length up to 32 bytes,"Sets product top-level SKU, maximum of 32 characters  Format is ASCII, with characters  padded to 8 bits with a 0 as the MSB.  The special string 0xFF may be used to clear this field",O,A,,,,,,,,Yes
+,Y,GET_COMMAND (0x20),8090,Get manufacture date,7 byte,"Returns the date of manufacture.  This is a 7 byte field of the format [year:year:month:day:hour:minute:second]
+Year is a 16-bit value",O,A,,,,,,,,Yes
+,,SET_COMMAND (0x30),8090,Set manufacture date,7 byte,,,A,,,,,,,,Yes
+,,GET_COMMAND (0x20),80C0,Get SFT version ,4 byte,"Returns the device version number.  This is comprised of:.
+- SFT number (16-bit) - top 2 bytes
+- SFT variant (8-bit)
+- SFT build version (8-bit) - bottom byte",O,A,B,0x00000000,0xFFFFFFFF,,,,This command is deprecated in normal operation - use 0x0060 or 0x00C1 instead,No
+,,GET_COMMAND (0x20),8208,Get lifetime temperature statistics,5 bytes,"Returns the following values:
+- Lifetime max CPU temperature (MSB, signed)
+- Timestamp of lifetime max CPU temperature (4 bytes)
+These values persist through resets and power events.",O,A,,0x0000000000,0xFFFFFFFFFF,,,,,No
+,,SET_COMMAND (0x30),8208,Clear lifetime temperature statistics,none,,,A,,No payload,No payload,,,,,No
+,,GET_COMMAND (0x20),8400,Get operating time,4 byte,Returns operating time in seconds.  This value persists through resets and power events.  This value is used for timestamps.  ,O,A,,0x00000000,0xFFFFFFFF,,,,,No
+,,SET_COMMAND (0x30),8400,Reset operating time,none,Resets the device operating time and clears all timestamps,,A,,No payload,No payload,,,,,No
+,Y,GET_COMMAND (0x20),8600,Get node channel resolution,1 byte,"Returns the number of bits used by each LED channel.  The following options are defined:
+- 0x00: high-resolution (16-bit) channel control
+- 0x01: standard-resolution (typically 8-bit) channel control",O,A,,0x00,0x01,,,,,Yes
+,Y,SET_COMMAND (0x30),8600,Set node channel resolution,1 byte,,O,A,,0x00,0x01,,,,,Yes
+,Y,GET_COMMAND (0x20),8610,Get node startup values - Channel 0,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node.",O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,SET_COMMAND (0x30),8610,Set node startup values - Channel 0,2 byte,,O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,GET_COMMAND (0x20),8611,Get node startup values - Channel 1,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node.",O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,SET_COMMAND (0x30),8611,Set node startup values - Channel 1,2 byte,,O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,GET_COMMAND (0x20),8612,Get node startup values - Channel 2,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node.",O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,SET_COMMAND (0x30),8612,Set node startup values - Channel 2,2 byte,,O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,GET_COMMAND (0x20),8613,Get node startup values - Channel 3,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node.",O,A,,0x0000,0xFFFF,,,,,Yes
+,Y,SET_COMMAND (0x30),8613,Set node startup values - Channel 3,2 byte,,O,A,,0x0000,0xFFFF,,,,,Yes
+,,GET_COMMAND (0x20),9001,Get Manufacturing Lock status,4 byte,"Returns the status of the device lock.  The following states are defined: 
+- 0x4F50454E: open (""OPEN"") - The protected settings are allowed to change
+- 0x4C4F434B: Locked (""LOCK"") - Protected settings not allowed to change",O,A,,Defined values only,Defined values only,,,,"This PID is provided to enable settings lock per security requirements.  If a settings lock that does not use RDM PIDs is used, it is not required to implement this PID",No
+,,SET_COMMAND (0x30),9001,Enable Manufacturing Lock,Magic value of 0x4C4F434B (ASCII for LOCK),Locks factory settings on device.  CANNOT BE CLEARED ONCE SET.,O,A,,Defined values only,Defined values only,,,,,No
+,,GET_COMMAND (0x20),9F00,Get LED channel map,5 byte,"Returns the mapping of inputs to LED channels.  The channel map consists of 5 bytes, each corresponding to one LED channel.  Each byte of the map provides the offset from the light index for that channel.  If the LED channel is not present, this is represented by 0xFF for the light offset.  A 4 channel fixture with the channels mapped 1:1 to the input channels would have the channel map 0x00010203FF",O,A,,0x0000000000,0xFFFFFFFFFF,,,,,No
+,,SET_COMMAND (0x30),9F00,Set LED channel map,5 byte,,O,A,,0x0000000000,0xFFFFFFFFFF,,,,,No
+,Y,GET_COMMAND (0x20),9F02,Get LED chemistry,1 byte,"Returns the mix of LEDs for the fixture.  A list of defined values can be found in the ""LED Chemistries"" sheet within this document",O,A,,Defined values only,Defined values only,,,,,Yes
+,,SET_COMMAND (0x30),9F02,Set LED chemistry,1 byte,,O,A,,Defined values only,Defined values only,,,,,No
+,,GET_COMMAND (0x20),9F0A,Get thermal shutdown activate threshold,1 byte signed,"Returns the temperature, in °C, at which the fixture enters thermal shutdown",O,A,,0x00,0xFF,,,,,No
+,,SET_COMMAND (0x30),9F0A,Set thermal shutdown activate threshold,1 byte signed,,,A,,0x00,0xFF,,,,,No
+,,GET_COMMAND (0x20),9F0C,Get thermal shutdown deactivate threshold,1 byte signed,"Returns the temperature, in °C, at which the fixture exits thermal shutdown",O,A,,0x00,0xFF,,,,,No
+,,SET_COMMAND (0x30),9F0C,Set thermal shutdown deactivate threshold,1 byte signed,,,A,,0x00,0xFF,,,,,No

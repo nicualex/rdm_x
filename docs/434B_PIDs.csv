@@ -1,0 +1,564 @@
+Command Class,PID,Purpose,Payload,Description
+GET_COMMAND (0x20),0010,Discover nodes,,See RDM standard for RDM devices.  Performs a discovery and returns an ordered list of nodes on XMX devices
+GET_COMMAND (0x20),0011,Get node count,,See RDM standard
+GET_COMMAND (0x20),0015,Get RDM statistics,,See RDM standard
+SET_COMMAND (0x30),0015,Set RDM statistics,,See RDM standard
+GET_COMMAND (0x20),0050,Get supported parameters list,,See RDM standard
+GET_COMMAND (0x20),0051,Get supported parameters description,,See RDM standard
+GET_COMMAND (0x20),0060,Get RDM Device Info,19 bytes,"See RDM Standard
+Returns the following values:
+- Protocol version (top 2 bytes) - fixed value of 0x0100 for RDM or 0x8000 for XMX protocol and CKDMX gen2
+- Device Model ID (next 2 bytes) [from opcode 0x8070]
+- Product Category (next 2 bytes) [from opcode 0x8070]
+- SFT Version (next 4 bytes) [from opcode 0x80C0]
+- Channel count (next 2 bytes) [returns same value as opcode 0x860F, fixed at 0x0000 for PDS]
+- Device personality (next 2 bytes) - temporary fixed value of 0x0000 for PDS and 0xFFFF for node
+- Device start address (next 2 bytes) [from opcode 0x00F0, fixed at 0xFFFF for PDS]
+- Sub-device count (next 2 bytes) - Devices without subdevices report a fixed value of 0x0000
+- Sensor count (bottom byte) - Devices which do not suport opcode 0x0200 return a fixed value of 0x00"
+GET_COMMAND (0x20),0080,Get RDM Device Model Description,,See RDM Standard
+SET_COMMAND (0x30),0080,Set RDM Device Model Description,,See RDM Standard
+GET_COMMAND (0x20),0081,Get RDM Manufacturer Label,,See RDM Standard
+SET_COMMAND (0x30),0081,Set RDM Manufacturer Label,,See RDM Standard
+GET_COMMAND (0x20),0082,Get RDM Device Label,,See RDM Standard
+SET_COMMAND (0x30),0082,Set RDM Device Label,,See RDM Standard
+GET_COMMAND (0x20),0090,Get Factory Defaults status,,"See RDM Standard.
+Returns if the device is currently in the factory default state.  A device is in the factory default state if no settings have been modified since the device was restored to factory defaults.  If a user manually sets device settings to the same values defined in factory defaults, the fixture is not set to factory defaults."
+SET_COMMAND (0x30),0090,Restore Factory Defaults,,"See RDM Standard.
+When set, restores the device to factory defaults.  Factory defaults are defined as the firmware defaults for a device that is unlocked or lacks a separate manufacturing defaults database, and the contents of the manufacturing defaults database for a device that has such a database and is locked."
+GET_COMMAND (0x20),00C0,Get SFT version label,variable up to 32 byte,"See RDM standard.
+Returns a human-readable, ASCII-encoded, software version string in the following format:
+SFT-012345-67 A:89 B:12
+where A: is the application software version and B: is the bootloader version
+The string returned is the same as the software version string returned by KiNET discovery"
+GET_COMMAND (0x20),00C1,Get Bootloader version,4 byte,
+GET_COMMAND (0x20),00C2,Get Bootloader version label,variable up to 32 byte,Returns same value as PID 0x00C0
+GET_COMMAND (0x20),00E0,Get Device Personality,,See RDM Standard
+SET_COMMAND (0x30),00E0,Set Device Personality,,See RDM Standard
+GET_COMMAND (0x20),00E1,Get DMX Personality Description,,See RDM standard
+GET_COMMAND (0x20),00F0,Get node light index,2 byte,"Returns the byte index of the light data packet that corresponds to the first fixture LED channel.  For compatibility with DMX addresses, an index of 1 corresponds to the first byte in the light data packet.  As an example, a fixture with a node light index of 0x04 would ignore the first 3 bytes of light data, and start reading light data beginning with the 4th byte.  A node light index of 0 is undefined."
+SET_COMMAND (0x30),00F0,Set node light index,2 byte,
+GET_COMMAND (0x20),0200,Get sensor definition,See RDM standard,"See sensor table for list of sensors and descriptions.  ""Normal"" minima and maxima are not defined; -32768 and 32767 should be returned for the normal minium and normal maximum respectively"
+GET_COMMAND (0x20),0201,Get sensor data,See RDM standard,"See RDM standard for format, and see sensor list below.  ""Recorded value"" is not supported"
+GET_COMMAND (0x20),0343,Get RDM Dimming Curve,,"See RDM Standard
+The following Dimming curves are defined:
+0x01: Linear
+0x02: CK Normal
+0x03: CK Tungsten"
+SET_COMMAND (0x30),0343,Set RDM Dimming Curve,,See RDM Standard
+GET_COMMAND (0x20),0344,Get RDM Dimming Curve Description,,See RDM Standard
+SET_COMMAND (0x30),0344,Set RDM Dimming Curve Description,,See RDM Standard
+GET_COMMAND (0x20),0400,Get Device Hours,4 bytes,See RDM sandard
+SET_COMMAND (0x30),0400,Set Device Hours,4 bytes,This parameter is used to set the number of hours of operation the device has been in use. Only allow to set to 0x00000000 before manufacturing lock enabling.
+GET_COMMAND (0x20),1000,Get Identify Device State,1 byte,"Returns the state of device identify for the device.  The following states are defined: 
+- 0x00 (identify off)
+- 0x01 (identify active)
+The behavior of ""device identify"" for PDS units is still being defined, but will only involve indicatiors local to the PDS and will not involve attached nodes."
+SET_COMMAND (0x30),1000,Set Identify Device State,,Sets the state of device identify for the PDS
+SET_COMMAND (0x30),1001,Reset Device,No payload sent,Resets the target device.  
+GET_COMMAND (0x20),1010,Get PDS power state,See RDM standard,"Gets/sets the state of the output power switching.  The following states are defined:
+- 0xFF: Output power enabled.  [POWER_STATE_NORMAL]
+- 0x02: Output power disabled [POWER_STATE_STANDBY]
+This is a partial duplication of the functionality available via opcode 0x9040"
+SET_COMMAND (0x30),1010,Set PDS power state,,This is a partial duplication of the functionality available via opcode 0x9040
+GET_COMMAND (0x20),8002,Get node passthrough mode,1 byte,Returns the mode  the node passthrough commands.   0x00: the node passthrough the commands; 0x01: the node doesn't passthrough the commands
+SET_COMMAND (0x30),8002,Set node passthrough mode,1 byte,
+GET_COMMAND (0x20),8010,Get node discovery parameters, ,"Gets the method to be used for node discovery.   0x00 is combined discovery, 0x01 is address line discovery (""fast discovery""), 0x02 is robust discovery"
+SET_COMMAND (0x30),8010,Set node discovery parameters, , 
+GET_COMMAND (0x20),8011,Get number of sub-devices,2 byte,"Returns number of sub-devices. On GrazeElite, it is the # of DLEs / fixture, or # of pixels / DLE"
+GET_COMMAND (0x20),8012,Get sub-device parameters,,"Payload includes:
+- Index for a sub-device (16-bit, 0 - PCC, n(n > 0) - the nth DLE)
+- PID (16-bit, PID sent to the target sub-device, exclude 8012)
+- Data (optional for the PID needs parameter for GET command, for example 9FEE)
+Response is the response payload of the PID"
+SET_COMMAND (0x30),8012,Set sub-device parameters,,"Payload includes:
+- Index for a sub-device (16-bit, 0 - PCC, n(n > 0) - the nth DLE)
+- PID (16-bit, PID sent to the target sub-device, exclude 8012)
+- Payload of SET PID command to the target sub-device"
+GET_COMMAND (0x20),8015,Get output network statistics,28 bytes,"Payload indicates the port to return statistics for.  This value is zero-indexed.  For devices that only have a single port, the port indication may be ignored.
+Response includes:
+- Total transmitted packets (top 4 bytes)
+- Total received packets (next 4 bytes)
+- Received packet length errors (next 4 bytes)
+- Received  packet CRC errors (next 4 bytes)
+- UART receive errors (next 4 bytes)
+- Processed packets with invalid data (next 4 bytes)
+- Received packets intended for device (bottom 4 bytes)
+Packet and error statistics are counted from the most recent clear command or device reset.  Packet errors generated by responses to ranged commands are excluded from the statistics."
+SET_COMMAND (0x30),8015,Clear output network statistics,,"Payload indicates the port to clear statistics for.  This value is zero-indexed.  For devices that only have a single port, the port indication may be ignored."
+GET_COMMAND (0x20),802F,Get list of fixtures with errors,Variable,Returns a packed list of fixture SNs with device failure codes reported.  
+SET_COMMAND (0x30),802F,Clear list of fixtures with errors,,
+GET_COMMAND (0x20),8030,Get device failure code,1 byte,"Returns the device failure code.  A list of failure codes can be found in the ""Error codes""  sheet within this document.  This value is cleared on device reset or upon a change in error condition."
+SET_COMMAND (0x30),8030,Run device self test,1 byte,"Places device into diagnostic mode, runs device self test, and returns device failure code upon completion of self test.  For devices where all parameters are monitored without entering a diagnostic mode, the functionality of this command is the same as ""Get device failure code"""
+GET_COMMAND (0x20),803A,Get Settings Hash,8 byte,"Returns a set of CRC-16 values for the various device databases.  The polynomial used for the CRC calculations is x^16+x^12+x^5+1 (CRC-16 CCITT).
+For databases that are not present, 0x0000 should be returned as the CRC.
+- Top 2 bytes are reserved for future use - 0x0000 should be returned in this slot
+- Next 2 bytes are MFG Data CRC
+- Next 2 bytes are MBR CRC
+- Low 2 bytes are Settings CRC"
+GET_COMMAND (0x20),8050,Get available parameters list size,2 byte,Returns a count of how many opcodes are supported on the device
+GET_COMMAND (0x20),8051,Get available parameters list,32 byte,"Returns a list of opcodes that can be queried or set on the device.  Format is a packed list of 16x 16-bit opcodes.  Command class is not returned by this command.  This opcode requires a 16-bit data offset as part of the query.  The 0x0000 opcode is not returned by this command, and is used to pad responses to 256 bits."
+GET_COMMAND (0x20),8052,Get backup data,,"Return raw data in the target backup memory bank.
+The query command requires 3 bytes arguments:
+- Memory offset of the target node memory bank used for backup (16-bit offset in number of bytes, as well as the index of the first byte in memory bank to query) [top 2 bytes]
+- Data size to query (8-bit for number of bytes to query, shouldn't be larger than 32) [bottom 1 byte]
+Ex, 0x0010 08 is querying 8 bytes from byte 0x10 in the memory bank"
+SET_COMMAND (0x30),8052,Set backup data,,"Backup data at the designated offset in the backup memory, or SET an opcode values
+Payload is variable length between 4 and 35 bytes as follows:
+- Top 2 bytes: Offset (16-bit offset for the data to store on the target DLE) / PID to set data to the target node
+- Next highest byte: PID type (8-bit, 1 = the above is a 16-bit offset, 2 = the above is a PID)
+- Bottom bytes: Payload of data to store or set, 1-32 bytes"
+GET_COMMAND (0x20),8053,Get data restore process status,1 byte,Return status of data restore process: 0 = idle; 1 = restore is in progress
+SET_COMMAND (0x30),8053,Start data restore process,4 byte,"Payload includes:
+- Source device index (16-bit, 0 is PCC, 1 or above is DLE) [top 2 bytes]
+- Destination device index (16-bit, 0 is PCC, 1 or above is DLE) [bottom 2 bytes]
+When both source index and destination index are 0, force to backup from PCC to all DLEs"
+GET_COMMAND (0x20),8060,Get serial number,6 byte,"Returns the device serial number, a globally unique identifier.  "
+SET_COMMAND (0x30),8060,Set serial number,6 byte,
+GET_COMMAND (0x20),8070,Get device type,4 byte,"Returns the device type.  The device type is a 32-bit field constructed from the following 2 16-bit properties:
+- Device Model ID (high 16 bits)
+- Product Category (low 16 bits)"
+SET_COMMAND (0x30),8070,Set device type,4 byte,
+GET_COMMAND (0x20),8071,Get board ID,1 byte,Returns hardware board ID
+GET_COMMAND (0x20),8072,Get device SKU,Variable length up to 32 bytes,"Returns product top-level SKU, maximum of 32 characters  Format is ASCII, with characters padded to 8 bits with a 0 as the MSB."
+SET_COMMAND (0x30),8072,Set device SKU,Variable length up to 32 bytes,"Sets product top-level SKU, maximum of 32 characters  Format is ASCII, with characters  padded to 8 bits with a 0 as the MSB.  The special string 0xFF may be used to clear this field"
+GET_COMMAND (0x20),8090,Get manufacture date,7 byte,"Returns the date of manufacture.  This is a 7 byte field of the format [year:year:month:day:hour:minute:second]
+Year is a 16-bit value"
+SET_COMMAND (0x30),8090,Set manufacture date,7 byte,
+GET_COMMAND (0x20),809A,Get LED bin code,2 byte,Returns the Optibin bin code
+SET_COMMAND (0x30),809A,Set LED bin code,2 byte,
+GET_COMMAND (0x20),80C0,Get SFT version ,4 byte,"Returns the device version number.  This is comprised of:.
+- SFT number (16-bit) - top 2 bytes
+- SFT variant (8-bit)
+- SFT build version (8-bit) - bottom byte"
+GET_COMMAND (0x20),80D0,Get assembly data,16 byte,"Returns information on the multi-node assembly.  Information contained in this opcode is as follows:
+- Number of nodes in assembly (top 2 bytes)
+- Node number in assembly (next 2 bytes).  A value of 0xFFFF in this field is used for nodes where the location is unknown
+- 12 ASCII character top-level assembly serial number (bottom 12 bytes).  All ASCII characters are padded to 8-bits with a 0 as the MSB"
+SET_COMMAND (0x30),80D0,Set assembly data,16 byte,
+GET_COMMAND (0x20),80D1,Get physical pixel count,2 byte,"Returns the number of controllable pixels physically present in the device, independent of any pixel resolution settings.  Does not perform a discovery; discovery can be performed by quering PID 0x0011 or 0x0010"
+SET_COMMAND (0x30),80D1,Set physical pixel count,2 byte,Used to manually override the discovered pixel count
+GET_COMMAND (0x20),8201,Get extended sensor data,13 bytes,"GET payload is the 16-bit sensor ID
+Response includes:
+- Sensor ID (8 bit unsigned) [MSB]
+- Mean Value (16 bit signed)
+- Timestamp of minimum (32 bit unsigned)
+- Timestamp of maximum (32 bit unsigned)
+- Rolling 1 minute min-max delta (16 bit signed) [LSB]"
+GET_COMMAND (0x20),8204,Get Device Mode,1 byte,"Queries the mode the device is in.  The following values are permitted responses:
+0x00: Operation Mode
+0x02: Admin Mode
+0x03: Bootloader Mode
+0x04: Recovery Mode
+0x05: Factory Test Mode"
+GET_COMMAND (0x20),8206,Get current device temperature,1-6 byte (signed),"Returns device temperature in °C
+CPU temperature and temperature for each LED string present required
+If LED temperature sensors are not present, the value from an alternate temperature sensor with good correlation to the LED string temperature may be returned as the LED string temperature
+PCC: 1 byte for PCC CPU temp
+DLE: 3 bytes for:
+- CPU temp.
+- Sensor 1 temp. 
+- Sensor 2 temp.
+GrazeElite: Returns signed bytes as device temperatures in °C:
+- Highest temperature of all following values
+- PCC CPU temp.
+- DLE 1 CPU temp.
+- DLE 1 sensor 1 temp. for channel 1 - 5
+- DLE 1 sensor 2 temp. for channel 6 - 10
+- [temps for other DLEs]"
+GET_COMMAND (0x20),8207,Get session temperature statistics,11 bytes,"Returns the following values:
+- Session CPU max temperature (top 8 bits, signed)
+- Timestamp of session CPU max temperature (32 bit)
+- Session CPU minimum temperature (8 bit, signed)
+- Timestamp of session CPU minimum temperature (32 bits)
+-  Mean CPU temperature in session (bottom 8 bits, signed)"
+GET_COMMAND (0x20),8208,Get lifetime temperature statistics,5 bytes,"Returns the following values:
+- Lifetime max CPU temperature (MSB, signed)
+- Timestamp of lifetime max CPU temperature (4 bytes)
+These values persist through resets and power events."
+SET_COMMAND (0x30),8208,Clear lifetime temperature statistics,none,
+GET_COMMAND (0x20),8209,Get session thermal shutdown statistics,2 bytes,"Returns the following values:
+- Fixture currently in thermal shutdown (0x00: normal operation, 0x01: thermal shutdown)
+- Count thermal shutdown events in session (8 bit)"
+GET_COMMAND (0x20),820A,Get lifetime shutdown statistics,6 bytes,"Returns the following values:
+- Count all time thermal shutdown events (16 bit)
+- Timestamp of most recent thermal shutdown event (32 bit)
+These values persist through resets and power events."
+GET_COMMAND (0x20),8210,Get LED string open status,8 bit bitmask,"Returns which LED strings are open.  Bit 0 is LED string 0, Bit 1 is LED string 1, etc.  High bits indicate string open, low bits indicate string functional.  0x00 is all strings good, 0x01 is string 0 open, other strings functional, etc."
+GET_COMMAND (0x20),8211,Get LED string open status change timestamp,4 bytes,Returns timestamp of last change in LED string open status
+GET_COMMAND (0x20),8212,Get LED string shorted status,8 bit bitmask,"Returns which LED strings have a shorted LED.  Bit 0 is LED string 0, Bit 1 is LED string 1, etc.  High bits indicate string has shorted LED, low bits indicate string functional.  0x00 is all strings good, 0x01 is string 0 shorted LED, other strings functional, etc."
+GET_COMMAND (0x20),8213,Get LED string shorted status change timestamp,4 byte,Returns timestamp of last change in LED string shorted status
+GET_COMMAND (0x20),8214,Get LED string stuck on status,8 bit bitmask,"Returns which LED strings are stuck on.  Bit 0 is LED string 0, Bit 1 is LED string 1, etc.  High bits indicate string stuck on, low bits indicate string functional.  0x00 is all strings good, 0x01 is string 0 stuck on, other strings functional, etc."
+GET_COMMAND (0x20),8215,Get LED string stuck status change timestamp,4 byte,Returns timestamp of last change in LED string stuck status
+GET_COMMAND (0x20),8220,Get node input voltage,2 byte,Returns node input voltage in millivolts.
+GET_COMMAND (0x20),8221,Get node input voltage session statistics,8 byte,"Returns the following values:
+- Input voltage maximum in session (high 16 bits)
+- Input voltage minimum in session (16 bits)
+- Input voltage mean in session (16 bits)
+- Input voltage 1 minute rolling min-max delta (bottom 16 bits)"
+GET_COMMAND (0x20),8222,Get Internal rail voltage,2 byte,"Returns internal rail voltage in millivolts
+DLE:
+- High rail voltage in mV (high 16-bit)
+- Low rail voltage in mV (middle 16-bit)
+- Driver voltage in mV (bottom 16-bit)"
+GET_COMMAND (0x20),8223,Get Internal rail voltage session statistics,8 byte,"Returns the following values:
+- internal rail voltage maximum in session (high 16 bits)
+- internal rail voltage minimum in session (16 bits)
+- internal rail voltage mean in session (16 bits)
+- internal rail voltage 1 minute rolling min-max delta (bottom 16 bits)
+DLE:
+- High rail voltage maximum in session (high 16 bits)
+- High rail voltage minimum in session (16 bits)
+- High rail voltage mean in session (16 bits)
+- High rail voltage 1 minute rolling min-max delta (16 bits)
+- Low rail voltage maximum in session (16 bits)
+- Low rail voltage minimum in session (16 bits)
+- Low rail voltage mean in session (16 bits)
+- Low rail voltage 1 minute rolling min-max delta (bottom 16 bits)"
+GET_COMMAND (0x20),8231,Get database statistics,4 byte,"Returns the following 8-bit values:
+ - Number of times Mdefault DB (MD)  is loaded in Application DB (ADB)
+ - Number of times Firmware Default is loaded into ADB
+ - Number of times crc failed during DB load/read
+ - Number of times DB write failed."
+SET_COMMAND (0x30),8231,Reset database statistics,none,Resets the database statistics
+GET_COMMAND (0x20),8232,Get database CRC statistics,30 bytes,"Returns the 5 most recent database read CRCs and associated timestamps, as follows:
+ - Most recent database read CRC (16-bits)
+ - Most recent  database read timestamp (32-bits)
+ - Database CRC and timestamp for next most recent read
+ - Database CRC and timestamp for third most recent read
+ - Database CRC and timestamp for fourth most recent read
+ - Database CRC and timestamp for fifth most recent read"
+GET_COMMAND (0x20),8400,Get operating time,4 byte,Returns operating time in seconds.  This value persists through resets and power events.  This value is used for timestamps.  
+SET_COMMAND (0x30),8400,Reset operating time,none,Resets the device operating time and clears all timestamps
+GET_COMMAND (0x20),8401,Get Power-on timestamp,4 byte,Returns timestamp of most recent power-on event
+GET_COMMAND (0x20),8402,Get session start timestamp,4 byte,Returns timestamp of start of most recent session
+GET_COMMAND (0x20),8405,Get reset statistics,8 byte,"Includes
+- Total resets (high 4 bytes)
+- Total watchdog events (low 4 bytes)
+These values persist through resets and power events."
+SET_COMMAND (0x30),8405,Clear reset statistics,none,
+GET_COMMAND (0x20),8406,Get power-on event count,4 byte,Returns count of all-time power-on events
+SET_COMMAND (0x30),8501,Run manufacturing test,Variable,"Runs a maufacturing test.  Payload is as follows
+ - First byte is the manufacturing test category
+ - Second byte is the specific manufacturing test
+ - Third and fourth bytes are the device model ID
+ - Subsequent bytes are the test parameters"
+GET_COMMAND (0x20),8600,Get node channel resolution,1 byte,"Returns the number of bits used by each LED channel.  The following options are defined:
+- 0x00: high-resolution (16-bit) channel control
+- 0x01: standard-resolution (typically 8-bit) channel control"
+SET_COMMAND (0x30),8600,Set node channel resolution,1 byte,
+GET_COMMAND (0x20),8602,Get node dimming curve,1 byte,"Returns the dimming curve used by the node.  The following options are defined:
+- 0x00: Linear curve
+- 0x01: Quadratic (CK Normal) curve
+- 0x02: Tungsten curve"
+SET_COMMAND (0x30),8602,Set node dimming curve,1 byte,
+GET_COMMAND (0x20),8603,Get DSM configurations,5 byte,"Returns the configuraton of deep dimming algorithm DSM (Delta-Sigma-Modulation). The payload includes:
+- Rev. number (8-bit, 1 - DSM1, 2 - DSM2) [top 1 byte]
+- Min. pulse width in clock cycles (16-bit) [next 2 bytes]
+- LED driver latency in clock cycles (16-bit) [bottom 2 bytes]
+- Max. pulse width in clock cycles (optional, 16-bit. The above 2 parameters shall be set smaller than this value) "
+SET_COMMAND (0x30),8603,Set DSM Configurations,5 byte,
+GET_COMMAND (0x20),8604,Get node fade speed,1 byte,Returns the fade speed used by the node
+SET_COMMAND (0x30),8604,Set node fade speed,1 byte,
+GET_COMMAND (0x20),8605,Get strobe configurations,2 byte,Returns strobe enable status and light frame interval in milliseconds
+SET_COMMAND (0x30),8605,Set strobe configurations,2 byte,
+GET_COMMAND (0x20),8606,Get Chromasync mode,1 byte,"Returns the Chromasync input mode.  The following values are defined:
+- 0x00: n-channel input & n-channel output (Chromasync off)
+- 0x01: 3-channel input & 3-channel output (Chromasync off)
+- 0x02: 3-channel input & n-channel output (Chromasync on)
+- 0x03: n-channel input and & n-channel output (Chromasync on)
+- 0x04: 3-channel input and 3-channel output (Chromasync on)
+- 0x05: 3-channel input & n-channel output (SimpleSync on)
+- 0x06: Intensity only mode (Chromasync off)
+- 0x07: xyY color control mode (Chromasync on)
+- 0x08: 3-channel input & n-channel output (SimpleSync Low Power on)
+- 0x09: 4-channel spectrum manipulation
+- 0x0A: 2-channel white input & n-channel output (iW mode)
+- 0x0B: 4-channel input & n-channel output (RGBW mode)
+
+Not all modes are required to be implemented"
+SET_COMMAND (0x30),8606,Set Chromasync mode,1 byte,
+GET_COMMAND (0x20),860C,Get pixel order,1 byte,"Returns the order of pixels within the fixture.
+ - 0x00: First pixel is closest to the input connector
+ - 0xFF: First pixel is furthest from the input connector"
+SET_COMMAND (0x30),860C,Set pixel order,1 byte,
+GET_COMMAND (0x20),860D,Get pixel resolution,1 byte,"Returns the number of LED pixels that 1 pixel data in light data frame are used for. The following values are defined:
+- 0: Use 1-pixel data for all LED pixels of the luminaire
+- n (n > 0): 1-pixel data from the light data frame will be applied on n LED pixels"
+SET_COMMAND (0x30),860D,Set pixel resolution,1 byte,
+GET_COMMAND (0x20),860F,Get DMX footprint,1 byte,Returns the number of logical control channels used by the device
+GET_COMMAND (0x20),8610,Get node startup values - Channel 0,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node."
+SET_COMMAND (0x30),8610,Set node startup values - Channel 0,2 byte,
+GET_COMMAND (0x20),8611,Get node startup values - Channel 1,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node."
+SET_COMMAND (0x30),8611,Set node startup values - Channel 1,2 byte,
+GET_COMMAND (0x20),8612,Get node startup values - Channel 2,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node."
+SET_COMMAND (0x30),8612,Set node startup values - Channel 2,2 byte,
+GET_COMMAND (0x20),8613,Get node startup values - Channel 3,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node."
+SET_COMMAND (0x30),8613,Set node startup values - Channel 3,2 byte,
+GET_COMMAND (0x20),8614,Get node startup values - Channel 4,2 byte,"Returns the values the LED channels go to when the node is initialized with no data stream present.  LED channel values are 16 bit resolution, and are sequential from channel 0 to channel 4.  Startup values are handled in the same way as light data received via a light data packet, and are affected by Chromasync, dimming curve, and channel map.  Unused channels are ignored at the node."
+SET_COMMAND (0x30),8614,Set node startup values - Channel 4,2 byte,
+GET_COMMAND (0x20),8715,Get Ethernet statistics,,"7 Ports of the following: 
+- 2 bytes Port Status Register 
+- 2 bytes Port Control Register
+- 2 bytes Port Packet Rx Count
+- 2 bytes Port Packet Tx Count
+- 2 bytes Port Packet Discard Count
+- 2 bytes Port Packet Filtered Count"
+GET_COMMAND (0x20),8716,Get PoE statistics,,To be defined based on available statistics from PoE controller chip
+GET_COMMAND (0x20),8903,Get sACN universe,4 byte,"Returns the sACN universe for a port on the device.  The port number to query is a single byte payload sent as part of the GET request.  The response takes the form
+ - Top 2 bytes are the port number
+ - Bottom 2 bytes are the sACN universe
+A GET with no port number in the payload should be responded with the values for port 1, but may optionally respond with port number 0xFFFF if all ports are set to the same universe.  Port number 0x0000 is not used."
+SET_COMMAND (0x30),8903,Set sACN universe,4 byte,"Sets the sACN universe for a port on the device.  The top 2 bytes denote the port, and the bottom 2 bytes denote the sACN universe.  The special port number 0xFFFF is used to set all ports on the device to the same sACN universe."
+GET_COMMAND (0x20),9001,Get Manufacturing Lock status,4 byte,"Returns the status of the device lock.  The following states are defined: 
+- 0x4F50454E: open (""OPEN"") - The protected settings are allowed to change
+- 0x4C4F434B: Locked (""LOCK"")
+- 0xB3B0BCB4: Unlocked (~""LOCK"") - All settings in this state are factory defaults and allowed to change"
+SET_COMMAND (0x30),9001,Enable Manufacturing Lock,"Magic value of 0x4C4F434B (ASCII for LOCK), or 32-bit temporary open Key","Locks factory settings on device.  CANNOT BE CLEARED ONCE SET.
+Temporary open key is  a 32-bit CRC: low 16-bit is computed with CRC16-CCITT polynomial 0x1021 initial 0 from 4-byte SN; and high 16-bit is computed from low 16-bit CRC as initial, plus bytes 0x4F, 0x50, 0x45, 0x4E (“OPEN”), and mfg ID 0x43, 0x4B"
+GET_COMMAND (0x20),900A,Get address line state,8 bit bitmask,"Returns the state of the address line inputs and outputs on the device.  This takes the form of an 8-bit bitmask: bit 0 corresponds to the input address line, and bits 1 through 7 correspond to output address lines on ports 0-6 respectively.  Address line asserted is denoted by a logical 1, and address line not asserted is denoted by a logical 0"
+SET_COMMAND (0x30),900A,Set address line state,8 bit bitmask,"Sets the state of the address line inputs and outputs on the device.  This takes the form of an 8-bit bitmask: bit 0 corresponds to the input address line, and bits 1 through 7 correspond to output address lines on ports 0-6 respectively. Bit 0 is ignored.  Address line asserted is denoted by a logical 1, and address line not asserted is denoted by a logical 0"
+GET_COMMAND (0x20),900B,Get 0-10V mode,1 byte,"Returns the mode for the 0-10V input.  Defined modes are:
+0x00: Port disabled
+0x01: Input scales incoming light data
+0x02: Input is passed to upstream control system"
+SET_COMMAND (0x30),900B,Set 0-10V mode,,
+GET_COMMAND (0x20),900D,Get input routing,132 bytes,"The response payload takes the form of a 132 byte field, corresponding to the 33 4-byte KTOKENs used for setting input routing.  The MSB corresponds to KTOKEN 1100, with subsequent bytes corresponding to KTOKENs 1101:1132.  Further details will be documented in a separate document outlining the protocol mapping scheme."
+SET_COMMAND (0x30),900D,Set input routing,,
+SET_COMMAND (0x30),9010,Set channel output / Fixture highlight,10 byte,"Sets the current status of the light data buffers.  This is functionally equivalent to a light data packet containing light data addressed to the fixture.  This takes the form of 5 16-bit values, one per LED channel."
+GET_COMMAND (0x20),9020,Get contractor test mode status,1 byte,"Sets or Gets state. 0x00=not active, 0x01=active."
+SET_COMMAND (0x30),9020,Set contractor test mode status,1 byte,
+GET_COMMAND (0x20),9030,Get fixed color mode status,1 byte,"Sets or Gets state. 0x00=not active, 0x01=active."
+SET_COMMAND (0x30),9030,Set fixed color mode status,1 byte,
+GET_COMMAND (0x20),9031,Get fixed color parameters,variable up to 16 bytes,"Gets or sets the parameters for the internal fixed color effect.  Format is as follows
+- Format (1 byte)
+- Payload (variable up to 15 bytes, depends on format)
+The following formats are defined:
+- 0x00: Raw buffer, max of 15 bytes
+- 0x01: HSV (16-bit hue [range 0:1535], 8-bit saturation, 8-bit intensity)
+- 0x02: xyY normal resolution (12-bit x, 12-bit y, 8-bit intensity; x and y are packed into 3 bytes)
+- 0x03: xyY high resolution (16-bit x, 16-bit Y, 16-bit intensity)"
+SET_COMMAND (0x30),9031,Set fixed color parameters,,
+GET_COMMAND (0x20),9040,Get PDS extended power mode,3 bytes,"Gets or sets PDS power mode.  Top byte is mode, next 2 bytes are timeout in seconds.   Attempts to enable power when a hardware fault is detected are respnded with NACK:hardware fault.  Errors are reported via the fault code. Defined modes are:
+
+0x01: Output power disabled.  $timeout is ignored
+0x10: Output off when no data received for $timeout seconds
+0x20: Output off when no data or black data received for $timeout seconds
+0xFF: Output power enabled.  $timeout is ignored
+A timeout of 0 is not allowed"
+SET_COMMAND (0x30),9040,Set PDS extended power mode,,
+GET_COMMAND (0x20),9041,Get PDS extended power state,6 bytes,"Gets current state of PDS output power.  Top three bytes are duplicated from PID 0x9040: the top byte is the power mode, and the next 2 bytes are the timeout in seconds.  The next byte is the current output state.  The last 2 bytes are the elapsed time into the timeout (e.g. time with black data for mode 0x20), in seconds.  For modes that ignore the timeout, 0x0000 should be returned as elapsed time.  For timeouts based on receipt of data, the elapsed time is always 0x0000 because the query command counts as incoming data.
+
+The following modes are defined:
+0x01: Output power disabled.  $timeout is ignored
+0x10: Output off when no data received for $timeout seconds
+0x20: Output off when no data or black data received for $timeout seconds
+0xFF: Output power enabled.  $timeout is ignored
+
+The following states are defined:
+0x02: Output power disabled by user
+0x82: Output power disabled by timeout
+0xFF: Output power enabled"
+GET_COMMAND (0x20),9050,Get CKDMX integrity mode,1 byte,"Gets or sets the usage of CKDMX integrity packets.  The following modes are defined
+0x00: Integrity packets not sent
+0x01: Integrity packets sent opportunistically (packets will be sent if timing allows)
+0x0F: Integrity packets always sent (may drop light data)"
+SET_COMMAND (0x30),9050,Set CKDMX integrity mode,1 byte,
+SET_COMMAND (0x30),90BB,Enter Node Bootloader mode,1 byte,"Places a node into bootloader mode in preparation for a firmware update. 
+Support broadcast on passthrough devices"
+GET_COMMAND (0x20),9C00,Get Chromasync operating gamut,30 byte,Returns the operating gamut used by Chromasync.  This takes the form of 5 sets of 16-bit tristimulus values (one set per LED channel)
+SET_COMMAND (0x30),9C00,Set Chromasync operating gamut,30 byte,
+GET_COMMAND (0x20),9C01,Get Chromasync inner gamut,10 byte,Return the inner gamut used by Chromasync 3.  This takes the form of 5 16-bit ratios corresponding to the 5 sets of tristimulus values in the Chromasync operating gamut.  The corners of the inner gamut are defined as the distance along a unit line extending from the center of the Chromasync operating gamut to each corner of the Chromasync operating gamut
+SET_COMMAND (0x30),9C01,Set Chromasync inner gamut,10 byte,
+GET_COMMAND (0x20),9C1E,Get Temperature Compensation threshold,1 byte signed,"Returns the difference, in °C, between 2 temperature readings required for temperature compensation to recalculate the natural gamut"
+SET_COMMAND (0x30),9C1E,Set Temperature Compensation threshold,1 byte signed,
+GET_COMMAND (0x20),9C20,Get Temperature Compensation slope,30 byte,Returns the temperature compensation slopes.  This takes the form of one 16-bit slope per tristimulus value per channel (a total of 15 scale factors)
+SET_COMMAND (0x30),9C20,Set Temperature Compensation slope,30 byte,
+GET_COMMAND (0x20),9C2E,Get temperature compensation scale factor,1 byte,Returns the scale factor applied to the temperature compensation slopes.
+SET_COMMAND (0x30),9C2E,Set temperature compensation scale factor,1 byte,
+GET_COMMAND (0x20),9C2F,Get temperature compensation slope offset,1 byte,Returns the Chromasync temperature compensation slope offset
+SET_COMMAND (0x30),9C2F,Set temperature compensation slope offset,1 byte,
+GET_COMMAND (0x20),9C30,Get Chromasync measurements,30 byte,"Returns the natural (measured) gamut of the fixture.  This takes the form of 5 sets of 16-bit tristimulus values (one set per LED channel). An optional byte as the payload of GET command is the index of the target pixel: if no it, the target pixel index is 0 as default"
+SET_COMMAND (0x30),9C30,Set Chromasync measurements,30(optinal: 31) byte,"An optional byte appended to the 5 sets of 16-bit tristimulus values is the index of the target pixel: if no it, the target pixel index is 0 as default"
+GET_COMMAND (0x20),9C3E,Get Chromsync measurement temperature,5 byte signed,"Returns node temperature per channel at the time of Chromasync measurements, in °C
+An optional byte as the payload of GET command is the index of the target pixel: if no it, the target pixel index is 0 as default"
+SET_COMMAND (0x30),9C3E,Set Chromsync measurement temperature,5(optinal: 6) byte signed,"An optional byte appended to the 5 byte values is the index of the target pixel: if no it, the target pixel index is 0 as default"
+GET_COMMAND (0x20),9C40,Get CRI targeting and limiting ratios,5 byte signed,"For CS 2.0 devices:  Returns the CRI targeting ratios used by Chromasync CRI targeting.  Enabled/Disabled using 9C4A.
+For CS 3.0 devices:  Returns the ratios used to limit channel usage - may be used to cap usage of specific color channels in Flakfizer color point calculations.  Always enabled when using Chromasync input mode; disable by providing no scaling (all FF) for 9C4A.
+This takes the form of one 8-bit scale factor per channel"
+SET_COMMAND (0x30),9C40,Set CRI targeting and limiting ratios,5 byte signed,
+GET_COMMAND (0x20),9C4A,Get spectral adjustment state,1 byte,"For CS 2.0 Devices:  Returns the CRI targeting state (use/don't use 9C40).  
+For CS 3.0 Devices:  (AKA CRI Optimization) Returns the spectral adjustment state  (use/don't use 9C60)
+The following values are defined:
+- 0x00: CRI Targeting/CRI Optimization/Spectral Adjustment Disabled
+- 0x01: CRI Targeting/CRI Optimization/Spectral Adjustment Enabled
+"
+SET_COMMAND (0x30),9C4A,Set spectral adjustment state,1 byte,
+GET_COMMAND (0x20),9C50,Get Saturation Blend mode,1 byte,"Returns the Chromasync saturation blending mode.  The following modes are defined:
+- 0x00: Saturation Blending Disabled
+- 0x01: Saturation Blending Enabled"
+SET_COMMAND (0x30),9C50,Set Saturation Blend mode,1 byte,
+GET_COMMAND (0x20),9C60,Get spectral adjustment coefficients,31 byte,"For CS 3.0 Devices only - Enabled via 9C4A - Returns 1 byte signed scale factor applied to the following 16-bit coefficients, and 3 sets of 5 16-bit signed CRI coeffient values."
+SET_COMMAND (0x30),9C60,Set spectral adjustment coefficients,31 byte,
+GET_COMMAND (0x20),9C71,Get Temperature Compensation Slope Coefficients a,31 byte,"Returns 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""a"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C71,Set Temperature Compensation Slope Coefficients a,31 byte,"Set 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""a"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C72,Get Temperature Compensation Slope Coefficients b,31 byte,"Returns 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""b"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C72,Set Temperature Compensation Slope Coefficients b,31 byte,"Set 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""b"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C73,Get Temperature Compensation Slope Coefficients c,31 byte,"Returns 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""c"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C73,Set Temperature Compensation Slope Coefficients c,31 byte,"Set 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""c"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C74,Get Current Slope Coefficients a,31 byte,"Returns 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""ai"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C74,Set Current Slope Coefficients a,31 byte,"Set 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""ai"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C75,Get Current Slope Coefficients b,31 byte,"Returns 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""bi"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C75,Set Current Slope Coefficients b,31 byte,"Set 3 sets of 5 16-bit signed values & 1 byte signed scale factor for values of ""bi"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C76,Get Chromasync measurement reference current,2 byte,"Return 16-bit unsigned value of ""I0"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+SET_COMMAND (0x30),9C76,Set Chromasync measurement reference current,2 byte,"Set 16-bit unsigned value of ""I0"" in temperature compensation equation Y = Y0 * ( 1 + (I – I0) * Mi ) * ( 1 + (T – T0) * Mt ), where Mi = ai * T0 + bi, Mt = c * I^2 + b * I + a. "
+GET_COMMAND (0x20),9C80,Get SimpleSync ratio,3 byte,"Returns the RGB values that equal the white point used by the SimpleSync algorithm as follows:
+ - Red ratio (8 bits)
+ - Green ratio (8 bits)
+ - Blue ratio (8 bits)
+These RGB values use a linear dimming curve"
+SET_COMMAND (0x30),9C80,Set SimpleSync ratio,3 byte,
+GET_COMMAND (0x20),9C81,Get White ratio,2 byte,"Returns the 16-bit ratio of warm to cool used to create a single virtual white channel from a pair of white CCTs, as follows:
+WarmWhite Lightdata = (WhiteRatio/65535) * WhiteLightData 
+CoolWhite Lightdata = ((65535- WhiteRatio)/65535) * WhiteLightData"
+SET_COMMAND (0x30),9C81,Set White ratio,2 byte,
+GET_COMMAND (0x20),9D00,Get Dynamic Beam mode,1 byte,"Returns the operating mode for Dynamic Beam operation.  The following modes are defined:
+0x00: Direct control of each optical zone
+0x01: Static beam angle set by PID 0x9D01
+0x02: Dynamic beam angle set by light data input"
+SET_COMMAND (0x30),9D00,Set Dynamic Beam mode,1 byte,
+GET_COMMAND (0x20),9D01,Get Dynamic Beam angle,1 byte,"Returns the static dynamic beam angle used when PID 0x9D00 is set to 0x01.  Angle is defined as a linear interpolation between the narrowest and widest angles the hardwareis capable of, with 0x00 corresponding to the narrowest angle and 0xFF corresponding to the widest angle."
+SET_COMMAND (0x30),9D01,Set Dynamic Beam angle,1 byte,
+GET_COMMAND (0x20),9F00,Get LED channel map,5 byte,"Returns the mapping of inputs to LED channels.  The channel map consists of 5 bytes, each corresponding to one LED channel.  Each byte of the map provides the offset from the light index for that channel.  If the LED channel is not present, this is represented by 0xFF for the light offset.  A 4 channel fixture with the channels mapped 1:1 to the input channels would have the channel map 0x00010203FF"
+SET_COMMAND (0x30),9F00,Set LED channel map,5 byte,
+GET_COMMAND (0x20),9F02,Get LED chemistry,1 byte,"Returns the mix of LEDs for the fixture.  A list of defined values can be found in the ""LED Chemistries"" sheet within this document"
+SET_COMMAND (0x30),9F02,Set LED chemistry,1 byte,
+GET_COMMAND (0x20),9F04,Get node scale values - Channel 0,1 byte,"Returns the scale factors for the LED channels.  The scale factor is an 8 bit value for each LED channel, and is used to reduce the output of one or more channels.  LED channel output is scaled according to the following equation: output = input * (scaler / 255)"
+SET_COMMAND (0x30),9F04,Set node scale values - Channel 0,1 byte,
+GET_COMMAND (0x20),9F05,Get node scale values - Channel 1,1 byte,"Returns the scale factors for the LED channels.  The scale factor is an 8 bit value for each LED channel, and is used to reduce the output of one or more channels.  LED channel output is scaled according to the following equation: output = input * (scaler / 255)"
+SET_COMMAND (0x30),9F05,Set node scale values - Channel 1,1 byte,
+GET_COMMAND (0x20),9F06,Get node scale values - Channel 2,1 byte,"Returns the scale factors for the LED channels.  The scale factor is an 8 bit value for each LED channel, and is used to reduce the output of one or more channels.  LED channel output is scaled according to the following equation: output = input * (scaler / 255)"
+SET_COMMAND (0x30),9F06,Set node scale values - Channel 2,1 byte,
+GET_COMMAND (0x20),9F07,Get node scale values - Channel 3,1 byte,"Returns the scale factors for the LED channels.  The scale factor is an 8 bit value for each LED channel, and is used to reduce the output of one or more channels.  LED channel output is scaled according to the following equation: output = input * (scaler / 255)"
+SET_COMMAND (0x30),9F07,Set node scale values - Channel 3,1 byte,
+GET_COMMAND (0x20),9F08,Get node scale values - Channel 4,1 byte,"Returns the scale factors for the LED channels.  The scale factor is an 8 bit value for each LED channel, and is used to reduce the output of one or more channels.  LED channel output is scaled according to the following equation: output = input * (scaler / 255)"
+SET_COMMAND (0x30),9F08,Set node scale values - Channel 4,1 byte,
+GET_COMMAND (0x20),9F0A,Get thermal shutdown activate threshold,1 byte signed,"Returns the temperature, in °C, at which the fixture enters thermal shutdown"
+SET_COMMAND (0x30),9F0A,Set thermal shutdown activate threshold,1 byte signed,
+GET_COMMAND (0x20),9F0C,Get thermal shutdown deactivate threshold,1 byte signed,"Returns the temperature, in °C, at which the fixture exits thermal shutdown"
+SET_COMMAND (0x30),9F0C,Set thermal shutdown deactivate threshold,1 byte signed,
+GET_COMMAND (0x20),9F10,Get posipower parameters,22 byte,"Includes:
+- 16-bit current for 5 channels (mA) (top 10 bytes)
+- 16-bit voltage for 5 channels (decivolts) (next 10 bytes)
+- 16-bit total LED power limit (centiwatts) (bottom 2 bytes)"
+SET_COMMAND (0x30),9F10,Set posipower parameters,22 byte,"Currents are not configurable, only voltages and total LED power limit are configurable"
+GET_COMMAND (0x20),9F11,Get reference string current,2 byte,Return 16-bit current value in mA
+SET_COMMAND (0x30),9F11,Set reference string current,2 byte,
+GET_COMMAND (0x20),9F12,Get reference string current coefficients,4 byte,"Return 16-bit values A1, B1, which are coefficients to compute DAC input value from from reference string current"
+SET_COMMAND (0x30),9F12,Set reference string current coefficients,4 byte,
+GET_COMMAND (0x20),9F13,Get string current scaler,10 byte,Return 10 bytes as 10 channel current scalers in percentage of the reference string current
+SET_COMMAND (0x30),9F13,Set string current scaler,10 byte,
+GET_COMMAND (0x20),9F20,Get PSU parameters,10 byte,"Includes:
+- PSU VCTRL duty cycle (16-bit percentage) (top 2 bytes)
+The following data are options
+- PSU nominal frequency (16-bit kHz) (next 2 bytes)
+- PSU nominal frequency variation (16-bit / 0.1% steps) (next 2 bytes)
+- PSU dithering frequency (16-bit / 100Hz steps) (next 2 bytes)
+- PSU dithering range (16-bit / 100Hz steps) (bottom 2 bytes)"
+SET_COMMAND (0x30),9F20,Set PSU parameters,10 byte,
+GET_COMMAND (0x20),9F22,Get Power Management parameters,3 byte,"Includes:
+- 8-bit PM timing scaler (10/255 minutes; 0=disable) [MSB]
+- PM minimum wattage (16-bit centiwatts) [Bottom 2 bytes]"
+SET_COMMAND (0x30),9F22,Set Power Management Parameters,3 byte,
+GET_COMMAND (0x20),9F30,Get Thermal Management parameters,3 byte,"Includes:
+- Thermal Management active threshold temperature (signed 8-bit in °C, start to dim output when temperature is above it) [top byte]
+- The max percentage to dim the output by (8-bit percentage, 0 disable thermal management) [next 1 byte]
+- Dim rate (8-bit percentage / minute) [bottom 1 byte]"
+SET_COMMAND (0x30),9F30,Set Thermal Management Parameters,3 byte,
+GET_COMMAND (0x20),9F40,Get Sunmoon 5206x configuration parameters,2 byte,"MSB is PWM Frequency, valid values are in {00,01,02,03,04,05,07}
+LSB is a packed value containing the following settings:
+ - PWM phase shift enable (top bit)
+ - Iout time compensation (next 4 bits)
+ - Din threshold set (next bit)
+ - Dout level set (next bit)
+ - Iout response time (bottom bit)"
+SET_COMMAND (0x30),9F40,Set Sunmoon 5206x configuration parameters,2 byte,
+GET_COMMAND (0x20),9FEE,Get EEPROM values,32 byte,Returns a 32 byte slice of the EEPROM contents.  This command requires a 16-bit data offset parameter as part of the query.
+SET_COMMAND (0x30),A000,Reset to Bootloader Mode,,"Refer to New Direct II Flowchart, reset to bootloader mode is needed."
+GET_COMMAND (0x20),A001,Get Manufacture UID,6 bytes,Return 48bits UID.
+SET_COMMAND (0x30),A001,Set Serial Number,6 bytes,
+SET_COMMAND (0x30),A002,Set Device Type Description,24 bytes,Reference to Short List MT Overview.
+GET_COMMAND (0x20),A00C,Get Manufacture Upload Parameter,,Refer to Direct II Upload Protocol Spec.
+SET_COMMAND (0x30),A00C,Set Manufacture Upload Parameter,,Refer to Direct II Upload Protocol Spec.
+GET_COMMAND (0x20),A021,Get Manufacture Startup Color,4 bytes,Default values: FF FF FF FF
+SET_COMMAND (0x30),A021,Set Manufacture Startup Color,4 bytes,"Valid range : 0x00 - 0xff
+First byte for RED channel, second byte for GREEN channel, third byte for BLUE channel, the last byte for WHITE channel."
+GET_COMMAND (0x20),A042,Get Manufacture Power Scale Value,2 bytes,"The query should be combined with data array (PDL = 1) :
+00: Global power scale.
+01: RED channel power scale.
+02: GREEN channel power scale.
+03: BLUE channel power scale.
+04: WHITE channel power scale.
+
+Returns power scale value in HEX format. First byte for LED channel, the second byte for power scaler.
+The scaler is an 8 bit value for each channel, which is used to redece the output of one or more channels.
+The actual LED channel output is scaled according to this equation: actual output = input * scaler / 255."
+SET_COMMAND (0x30),A042,Set Manufacture Power Scale Value,2 bytes," First byte for LED channel, the second byte for power scaler."
+SET_COMMAND (0x30),BB00,Node Bootloader reset,,Support broadcast on passthrough devices
+SET_COMMAND (0x30),BB01,Node Bootloader write flash,,Support broadcast on passthrough devices
+SET_COMMAND (0x30),BB02,Node Bootloader erase flash,,Support broadcast on passthrough devices
+SET_COMMAND (0x30),F000,Set PDS bootloader target SN list,Variable up to 231 bytes,"Sets list of device serial numbers to bootload.  
+Packet structure is as follows:
+- Packet sequence (1 byte)
+- Serial number count (1 byte)
+- Serial number list (packed, no delimiters, big endian) (variable length)
+NACK responses are as follows:
+- 0x0004: Device not in bootloader mode
+- 0x0006: PDS serial number list size <1 or >255, or packet SN count <1 or >38
+- 0x0009: Serial number in list not known to PDS, or SFT versions do not match
+The ACK response contains the total number of serial numbers in the list"
+SET_COMMAND (0x30),F003,Set Boot Image Info,32 bytes,"Includes:
+- Image size in bytes (8 bytes)
+- Image CRC (8 bytes) [CRC-16 CCITT is the algorithm used]
+- Image version (8 bytes)
+- SFT number (8 bytes)
+NACK responses are as follows:
+- 0x0001: payload size is not 4 bytes
+- 0x0004: device not in bootloader mode
+- 0x0006: SFT mismatch, image too large, or other problem with the payload
+ACK responses contain the size of the flash block in bytes (2 bytes)"
+SET_COMMAND (0x30),F004,Set Boot Image file,Variable,"Sets a single flash block fragment of the boot image.  Format is as follows:
+- Packet sequence number (2 bytes)
+- Payload byte count (1 byte)
+- Payload (variable up to 228 bytes)
+ACK response format is as follows
+- Packet sequenct number (2 bytes)
+- Hold time until next packet (milliseconds) (4 bytes)
+NACK responses are as follows:
+- 0x0001: CRC failure
+- 0x0002: Write failure
+- 0x0004: Device not ready to receive image data
+- 0x0006: Packet out of sequence, SFT mismatch, or data size incorrect"
+SET_COMMAND (0x30),F006,Initiate FW update,None,"Instructs PDS to begin the bootloading process.  For PDS updates, this validates the image and sets the boot target.  For subdevice updates, this validates the image and begins bootloading the subdevices in the target list.
+NACK responses are as follows:
+- 0x0002: Failed to initiate bootloading process"
+GET_COMMAND (0x20),F007,Get bootload status,11 bytes,"Returns the status of the current bootloading operation.  Response format is as follows:
+- Serial nmber list size (1 byte)
+- Current serial number list index (1 byte)
+- Serial number (8 byte)
+- Status code for current serial number (1 byte):
+-- 0x00: Not done
+-- 0x01: In progress
+-- 0x02: Done
+-- 0x03: CRC mismatch
+-- 0x04: Failed Flash
+-- 0x05: SFT mismatch
+-- 0x06: UU file header parse error
+-- 0x07: Authenticate error
+-- 0x08: Decryption error
+-- 0x09 – 0xFF: reserved"
+SET_COMMAND (0x30),F008,Set PDS bootloader entry,Magic value of 0x424F4F54 (ASCII for BOOT),Places PDS into bootloader mode and returns encryption parameters.  SET commands which lack the proper magic value are responded with NACK:NR_UNKNOWN_PID
+SET_COMMAND (0x30),F009,Abort bootload process,None,"Aborts the bootload process.  ACK responses contain a single byte status code as follows:
+- 0x00: Abort unsuccessful
+- 0x01: Abort will occur after current subdevice completes
+- 0x02: Abort successful"

@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x86</PlatformTarget>
+    <ApplicationIcon></ApplicationIcon>
+    <AssemblyName>RDM_X</AssemblyName>
+    <RootNamespace>RDM_X</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <!-- Copy native DLL to output -->
+  <ItemGroup>
+    <None Include="..\build\Release\rdm_x_core.dll" CopyToOutputDirectory="PreserveNewest" Link="rdm_x_core.dll" />
+    <None Include="..\docs\Vaya_RDM_map.csv" CopyToOutputDirectory="PreserveNewest" Link="Vaya_RDM_map.csv" />
+  </ItemGroup>
+
+</Project>
