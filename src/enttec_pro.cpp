@@ -23,19 +23,37 @@ bool EnttecPro::Open(int deviceIndex) {
 
   std::lock_guard<std::mutex> lk(m_mutex);
 
-  // Retry up to 3 times (same pattern as the Enttec example)
-  FT_STATUS st = FT_OTHER_ERROR;
-  for (int tries = 0; tries < 3; ++tries) {
-    st = FT_Open(deviceIndex, &m_handle);
-    if (st == FT_OK)
-      break;
-    m_handle = nullptr; // ensure clean state on retry
-    Sleep(750);
+  // First attempt
+  FT_STATUS st = FT_Open(deviceIndex, &m_handle);
+
+  // If the first open fails, the device may have a stale handle from a
+  // previous unclean exit.  FT_Reload re-enumerates the driver at the
+  // kernel level WITHOUT needing an open handle — this clears stale state.
+  if (st != FT_OK) {
+    m_handle = nullptr;
+    OutputDebugStringA("[EnttecPro] FT_Open failed, attempting FT_Reload "
+                       "recovery (VID=0x0403, PID=0x6001)...\n");
+
+    // Reload the FTDI driver for standard VID/PID (clears stale handles)
+    FT_Reload(0x0403, 0x6001);
+    Sleep(2000); // give USB subsystem time to re-enumerate
+
+    // Retry up to 3 times after the reload
+    for (int tries = 0; tries < 3; ++tries) {
+      st = FT_Open(deviceIndex, &m_handle);
+      if (st == FT_OK)
+        break;
+      m_handle = nullptr;
+      Sleep(750);
+    }
   }
+
   if (st != FT_OK || m_handle == nullptr) {
     m_handle = nullptr;
+    OutputDebugStringA("[EnttecPro] FT_Open FAILED after reset attempt\n");
     return false;
   }
+  OutputDebugStringA("[EnttecPro] FT_Open succeeded\n");
 
   // ── Complete FTDI initialization (matches Enttec reference code) ──
   FT_SetBaudRate(m_handle, 57600);

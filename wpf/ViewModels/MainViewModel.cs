@@ -174,12 +174,30 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Connect()
     {
-        if (Devices.Count == 0) return;
-        if (NativeInterop.RDX_Open(SelectedDeviceIndex))
+        if (Devices.Count == 0)
         {
-            IsConnected = true;
-            FirmwareVersion = NativeInterop.GetFirmwareString();
-            SerialNumber = $"{NativeInterop.RDX_SerialNumber():X8}";
+            System.Windows.MessageBox.Show("No devices found.", "Connect");
+            return;
+        }
+        try
+        {
+            bool ok = NativeInterop.RDX_Open(SelectedDeviceIndex);
+            if (ok)
+            {
+                IsConnected = true;
+                FirmwareVersion = NativeInterop.GetFirmwareString();
+                SerialNumber = $"{NativeInterop.RDX_SerialNumber():X8}";
+            }
+            else
+            {
+                System.Windows.MessageBox.Show(
+                    $"RDX_Open({SelectedDeviceIndex}) failed after auto-reset attempt.\nTry unplugging and re-plugging the USB adapter.",
+                    "Connect Failed");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Connect error: {ex.Message}\n{ex.GetType().Name}", "Connect Error");
         }
     }
 
@@ -362,17 +380,24 @@ public partial class MainViewModel : ObservableObject
         byte[] payload = new byte[] { (byte)(newState ? 0x01 : 0x00) };
 
         BusyText = newState ? "Identify ON..." : "Identify OFF...";
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendSET(destUID, 0x1000, payload, 1, out var resp);
-            return resp;
-        });
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendSET(destUID, 0x1000, payload, 1, out var resp);
+                return resp;
+            });
 
-        if (result.Status == NativeInterop.STATUS_ACK)
-            IdentifyActive = newState;
-
-        IsBusy = false;
-        BusyText = "";
+            if (result.Status == NativeInterop.STATUS_ACK)
+                IdentifyActive = newState;
+        }
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── DMX Start Address (PID 0x00F0) ──────────────────────────────────
@@ -382,23 +407,30 @@ public partial class MainViewModel : ObservableObject
         if (SelectedUID == null || !IsConnected || IsBusy) return;
         IsBusy = true;
         BusyText = "Getting DMX address...";
-        var destUID = SelectedUID.UID;
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendGET(destUID, 0x00F0, null, 0, out var resp);
-            return resp;
-        });
+            var destUID = SelectedUID.UID;
 
-        if (result.Status == NativeInterop.STATUS_ACK && result.DataLen >= 2 && result.Data != null)
-        {
-            int addr = (result.Data[0] << 8) | result.Data[1];
-            DmxStartAddress = addr.ToString();
-            DmxAddressInput = addr.ToString();
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendGET(destUID, 0x00F0, null, 0, out var resp);
+                return resp;
+            });
+
+            if (result.Status == NativeInterop.STATUS_ACK && result.DataLen >= 2 && result.Data != null)
+            {
+                int addr = (result.Data[0] << 8) | result.Data[1];
+                DmxStartAddress = addr.ToString();
+                DmxAddressInput = addr.ToString();
+            }
         }
-
-        IsBusy = false;
-        BusyText = "";
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     [RelayCommand]
@@ -409,20 +441,27 @@ public partial class MainViewModel : ObservableObject
 
         IsBusy = true;
         BusyText = $"Setting DMX address to {addr}...";
-        var destUID = SelectedUID.UID;
-        byte[] payload = new byte[] { (byte)(addr >> 8), (byte)(addr & 0xFF) };
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendSET(destUID, 0x00F0, payload, 2, out var resp);
-            return resp;
-        });
+            var destUID = SelectedUID.UID;
+            byte[] payload = new byte[] { (byte)(addr >> 8), (byte)(addr & 0xFF) };
 
-        if (result.Status == NativeInterop.STATUS_ACK)
-            DmxStartAddress = addr.ToString();
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendSET(destUID, 0x00F0, payload, 2, out var resp);
+                return resp;
+            });
 
-        IsBusy = false;
-        BusyText = "";
+            if (result.Status == NativeInterop.STATUS_ACK)
+                DmxStartAddress = addr.ToString();
+        }
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── Device Info query (PID 0x0060) ──────────────────────────────────
@@ -432,21 +471,28 @@ public partial class MainViewModel : ObservableObject
         if (SelectedUID == null || !IsConnected || IsBusy) return;
         IsBusy = true;
         BusyText = "Getting Device Info...";
-        var destUID = SelectedUID.UID;
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendGET(destUID, 0x0060, null, 0, out var resp);
-            return resp;
-        });
+            var destUID = SelectedUID.UID;
 
-        if (result.Status == NativeInterop.STATUS_ACK && result.DataLen >= 19 && result.Data != null)
-            DeviceInfoText = DecodeDeviceInfo(result.Data, result.DataLen);
-        else
-            DeviceInfoText = "Failed to read Device Info";
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendGET(destUID, 0x0060, null, 0, out var resp);
+                return resp;
+            });
 
-        IsBusy = false;
-        BusyText = "";
+            if (result.Status == NativeInterop.STATUS_ACK && result.DataLen >= 19 && result.Data != null)
+                DeviceInfoText = DecodeDeviceInfo(result.Data, result.DataLen);
+            else
+                DeviceInfoText = "Failed to read Device Info";
+        }
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── Discovery ───────────────────────────────────────────────────────
@@ -456,22 +502,29 @@ public partial class MainViewModel : ObservableObject
         if (!IsConnected || IsBusy) return;
         IsBusy = true;
         BusyText = "Discovering RDM devices...";
-        DiscoveredUIDs.Clear();
-        SelectedUID = null;
-
-        int count = await RunRdmAsync(() => NativeInterop.RDX_Discover());
-
-        for (int i = 0; i < count; i++)
+        _dmxTimer?.Stop();
+        try
         {
-            if (NativeInterop.RDX_GetDiscoveredUID(i, out ulong uid))
+            DiscoveredUIDs.Clear();
+            SelectedUID = null;
+
+            int count = await RunRdmAsync(() => NativeInterop.RDX_Discover());
+
+            for (int i = 0; i < count; i++)
             {
-                if (!DiscoveredUIDs.Any(d => d.UID == uid))
-                    DiscoveredUIDs.Add(new DiscoveredUID { UID = uid });
+                if (NativeInterop.RDX_GetDiscoveredUID(i, out ulong uid))
+                {
+                    if (!DiscoveredUIDs.Any(d => d.UID == uid))
+                        DiscoveredUIDs.Add(new DiscoveredUID { UID = uid });
+                }
             }
         }
-
-        IsBusy = false;
-        BusyText = "";
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── PID loading ─────────────────────────────────────────────────────
@@ -505,21 +558,28 @@ public partial class MainViewModel : ObservableObject
 
         IsBusy = true;
         BusyText = $"Querying PID 0x{SelectedPid.Pid:X4}...";
-
-        byte[]? payload = ParseHexPayload(CustomPayloadHex);
-        var pid = SelectedPid;
-        var destUID = SelectedUID.UID;
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendGET(destUID, pid.Pid,
-                payload, payload?.Length ?? 0, out var resp);
-            return resp;
-        });
+            byte[]? payload = ParseHexPayload(CustomPayloadHex);
+            var pid = SelectedPid;
+            var destUID = SelectedUID.UID;
 
-        ApplyResult(pid, result);
-        IsBusy = false;
-        BusyText = "";
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendGET(destUID, pid.Pid,
+                    payload, payload?.Length ?? 0, out var resp);
+                return resp;
+            });
+
+            ApplyResult(pid, result);
+        }
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── Batch query: all GETs ───────────────────────────────────────────
@@ -529,28 +589,37 @@ public partial class MainViewModel : ObservableObject
         if (SelectedUID == null || !IsConnected || IsBusy) return;
 
         IsBusy = true;
-        var destUID = SelectedUID.UID;
-        var getItems = PidResults.Where(p =>
-            p.CmdClass.Contains("GET", StringComparison.OrdinalIgnoreCase)).ToList();
-
-        for (int i = 0; i < getItems.Count; i++)
+        // Stop DMX output entirely during RDM batch to prevent widget collisions
+        _dmxTimer?.Stop();
+        try
         {
-            var pid = getItems[i];
-            BusyText = $"Querying {i + 1}/{getItems.Count}: 0x{pid.Pid:X4} {pid.Name}";
+            var destUID = SelectedUID.UID;
+            var getItems = PidResults.Where(p =>
+                p.CmdClass.Contains("GET", StringComparison.OrdinalIgnoreCase)).ToList();
 
-            var result = await RunRdmAsync(() =>
+            for (int i = 0; i < getItems.Count; i++)
             {
-                NativeInterop.RDX_SendGET(destUID, pid.Pid,
-                    null, 0, out var resp);
-                return resp;
-            });
+                var pid = getItems[i];
+                BusyText = $"Querying {i + 1}/{getItems.Count}: 0x{pid.Pid:X4} {pid.Name}";
 
-            ApplyResult(pid, result);
+                var result = await RunRdmAsync(() =>
+                {
+                    NativeInterop.RDX_SendGET(destUID, pid.Pid,
+                        null, 0, out var resp);
+                    return resp;
+                });
+
+                ApplyResult(pid, result);
+            }
+
+            UpdateScorecard();
         }
-
-        UpdateScorecard();
-        IsBusy = false;
-        BusyText = "";
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── Send SET ────────────────────────────────────────────────────────
@@ -561,21 +630,28 @@ public partial class MainViewModel : ObservableObject
 
         IsBusy = true;
         BusyText = $"SET PID 0x{SelectedPid.Pid:X4}...";
-
-        byte[]? payload = ParseHexPayload(CustomPayloadHex);
-        var pid = SelectedPid;
-        var destUID = SelectedUID.UID;
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendSET(destUID, pid.Pid,
-                payload, payload?.Length ?? 0, out var resp);
-            return resp;
-        });
+            byte[]? payload = ParseHexPayload(CustomPayloadHex);
+            var pid = SelectedPid;
+            var destUID = SelectedUID.UID;
 
-        ApplyResult(pid, result);
-        IsBusy = false;
-        BusyText = "";
+            var result = await RunRdmAsync(() =>
+            {
+                NativeInterop.RDX_SendSET(destUID, pid.Pid,
+                    payload, payload?.Length ?? 0, out var resp);
+                return resp;
+            });
+
+            ApplyResult(pid, result);
+        }
+        finally
+        {
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = "";
+        }
     }
 
     // ── SUPPORTED_PARAMETERS cross-check (PID 0x0050) ───────────────────
@@ -586,50 +662,58 @@ public partial class MainViewModel : ObservableObject
 
         IsBusy = true;
         BusyText = "Querying SUPPORTED_PARAMETERS...";
-        var destUID = SelectedUID.UID;
-
-        var result = await RunRdmAsync(() =>
+        _dmxTimer?.Stop();
+        try
         {
-            NativeInterop.RDX_SendGET(destUID, 0x0050,
-                null, 0, out var resp);
-            return resp;
-        });
+            var destUID = SelectedUID.UID;
 
-        _supportedPids.Clear();
-        if (result.Status == NativeInterop.STATUS_ACK && result.DataLen > 0 && result.Data != null)
-        {
-            int count = result.DataLen / 2;
-            for (int i = 0; i < count; i++)
+            var result = await RunRdmAsync(() =>
             {
-                ushort pid = (ushort)((result.Data[i * 2] << 8) | result.Data[i * 2 + 1]);
-                _supportedPids.Add(pid);
+                NativeInterop.RDX_SendGET(destUID, 0x0050,
+                    null, 0, out var resp);
+                return resp;
+            });
+
+            _supportedPids.Clear();
+            if (result.Status == NativeInterop.STATUS_ACK && result.DataLen > 0 && result.Data != null)
+            {
+                int count = result.DataLen / 2;
+                for (int i = 0; i < count; i++)
+                {
+                    ushort pid = (ushort)((result.Data[i * 2] << 8) | result.Data[i * 2 + 1]);
+                    _supportedPids.Add(pid);
+                }
             }
+
+            // Also add mandatory PIDs that are always supported (per E1.20)
+            _supportedPids.Add(0x0050); // SUPPORTED_PARAMETERS itself
+            _supportedPids.Add(0x0060); // DEVICE_INFO
+            _supportedPids.Add(0x1000); // IDENTIFY_DEVICE
+
+            // Update SupportedStatus on each PidResult row
+            foreach (var p in PidResults)
+            {
+                if (_supportedPids.Contains(p.Pid))
+                    p.SupportedStatus = "✅";
+                else if (p.IsMandatory)
+                    p.SupportedStatus = "⚠ Missing";
+                else
+                    p.SupportedStatus = "❌";
+            }
+
+            // Also apply to the PID 0x0050 row itself
+            var pidRow = PidResults.FirstOrDefault(p => p.Pid == 0x0050);
+            if (pidRow != null)
+                ApplyResult(pidRow, result);
+
+            UpdateScorecard();
         }
-
-        // Also add mandatory PIDs that are always supported (per E1.20)
-        _supportedPids.Add(0x0050); // SUPPORTED_PARAMETERS itself
-        _supportedPids.Add(0x0060); // DEVICE_INFO
-        _supportedPids.Add(0x1000); // IDENTIFY_DEVICE
-
-        // Update SupportedStatus on each PidResult row
-        foreach (var p in PidResults)
+        finally
         {
-            if (_supportedPids.Contains(p.Pid))
-                p.SupportedStatus = "✅";
-            else if (p.IsMandatory)
-                p.SupportedStatus = "⚠ Missing";
-            else
-                p.SupportedStatus = "❌";
+            _dmxTimer?.Start();
+            IsBusy = false;
+            BusyText = $"{_supportedPids.Count} supported PIDs";
         }
-
-        // Also apply to the PID 0x0050 row itself
-        var pidRow = PidResults.FirstOrDefault(p => p.Pid == 0x0050);
-        if (pidRow != null)
-            ApplyResult(pidRow, result);
-
-        UpdateScorecard();
-        IsBusy = false;
-        BusyText = $"{_supportedPids.Count} supported PIDs";
     }
 
     // ── CSV Export ───────────────────────────────────────────────────────
@@ -1049,6 +1133,8 @@ public partial class MainViewModel : ObservableObject
         var token = _effectCts.Token;
         RdmStressRunning = true;
         RdmStressResult = "Running...";
+        // Stop DMX output entirely during stress test to prevent widget collisions
+        _dmxTimer?.Stop();
 
         var destUID = SelectedUID.UID;
         ushort pid = SelectedPid.Pid;
@@ -1106,6 +1192,7 @@ public partial class MainViewModel : ObservableObject
         }
         finally
         {
+            _dmxTimer?.Start();
             RdmStressRunning = false;
         }
     }

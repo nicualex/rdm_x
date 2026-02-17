@@ -135,8 +135,8 @@ static bool SendRDMCommand(uint64_t destUID, uint16_t pid, uint8_t commandClass,
           (unsigned)((destUID >> 32) & 0xFFFF),
           (unsigned)(destUID & 0xFFFFFFFF), (int)pkt.size());
 
-  // ── Quiet period: purge RX only (not TX — see ofxDmxUsbPro) ──
-  FT_Purge(g_pro.GetHandle(), 0x1); // FT_PURGE_RX = 1
+  // ── Quiet period: purge RX buffer (via mutex-guarded Purge) ──
+  g_pro.Purge();
   Sleep(20);
 
   // Measure TX→RX latency with high-precision timer

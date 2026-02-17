@@ -19,6 +19,9 @@ Returns the following values:
 - Sensor count (bottom byte) - Devices which do not suport opcode 0x0200 return a fixed value of 0x00",O,A,,See RDM standard,See RDM standard,,,,,No per RDM standard
 ,,GET_COMMAND (0x20),0080,Get RDM Device Model Description,"Variable, see RDM standard",See RDM Standard,O,A,,See RDM standard,See RDM standard,,,,,Yes
 ,,SET_COMMAND (0x30),0080,Set RDM Device Model Description,"Variable, see RDM standard",See RDM Standard,,A,,See RDM standard,See RDM standard,,,,,Yes
+,,GET_COMMAND (0x20),0081,Get Manufacturer Label,"Variable, see RDM standard",See RDM Standard — returns the manufacturer name as ASCII text,O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,GET_COMMAND (0x20),0082,Get Device Label,"Variable, see RDM standard","See RDM Standard — returns a user-assignable ASCII label (factory default may vary by OEM)",O,A,,See RDM standard,See RDM standard,,,,,Yes
+,,SET_COMMAND (0x30),0082,Set Device Label,"Variable, see RDM standard",See RDM Standard — sets a user-assignable ASCII label,,A,,See RDM standard,See RDM standard,,,,,Yes
 ,Y,GET_COMMAND (0x20),00C0,Get SFT version label,"Variable, see RDM standard","See RDM standard.
 Returns a human-readable, ASCII-encoded, software version string in the following format:
 SFT-012345-67 A:89 B:12
