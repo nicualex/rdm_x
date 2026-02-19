@@ -97,12 +97,22 @@ Copy-Item $NativeDll -Destination $PublishDir -Force
 Write-Host "  -> rdm_x_core.dll copied to publish dir" -ForegroundColor Green
 
 $PeperoniDll = Join-Path $Root "thirdparty\peperoni\vusbdmx.dll"
+$PeperoniDll = Join-Path $Root "thirdparty\peperoni\vusbdmx.dll"
 if (Test-Path $PeperoniDll) {
     Copy-Item $PeperoniDll -Destination $PublishDir -Force
     Write-Host "  -> vusbdmx.dll copied to publish dir" -ForegroundColor Green
 }
 else {
     Write-Warning "vusbdmx.dll not found at $PeperoniDll - Peperoni driver will not work"
+}
+
+$FtdiDll = Join-Path $Root "thirdparty\ftdi\ftd2xx.dll"
+if (Test-Path $FtdiDll) {
+    Copy-Item $FtdiDll -Destination $PublishDir -Force
+    Write-Host "  -> ftd2xx.dll copied to publish dir" -ForegroundColor Green
+}
+else {
+    Write-Warning "ftd2xx.dll not found at $FtdiDll - FTDI driver will not work"
 }
 
 # ── 3. Compile Inno Setup installer ──────────────────────────
