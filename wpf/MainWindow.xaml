@@ -17,6 +17,7 @@
         <conv:LatencyToBrushConverter x:Key="LatencyBrush"/>
         <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
         <conv:InverseBoolToVisibilityConverter x:Key="InvBoolVis"/>
+        <conv:InverseBoolConverter x:Key="InvBool"/>
     </Window.Resources>
 
     <Grid>
@@ -40,7 +41,14 @@
                     <TextBlock Text="CONNECTION" FontSize="10" FontWeight="Bold"
                                Foreground="{StaticResource TextSecBrush}" Margin="0,0,0,8"/>
 
-                    <Label Content="FTDI Device"/>
+                    <Label Content="Driver"/>
+                    <ComboBox ItemsSource="{Binding DriverTypes}"
+                              SelectedIndex="{Binding SelectedDriverIndex}"
+                              DisplayMemberPath="Name"
+                              IsEnabled="{Binding IsConnected, Converter={StaticResource InvBool}}"
+                              Margin="0,0,0,6"/>
+
+                    <Label Content="Device"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -317,7 +325,7 @@
                             <DataGridTemplateColumn Header="Latency" Width="90">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding LatencyUs, StringFormat={}{0}μs}"
+                                        <TextBlock Text="{Binding LatencyMs, StringFormat={}{0:F1}ms}"
                                                    Foreground="{Binding LatencyUs, Converter={StaticResource LatencyBrush}}"
                                                    FontFamily="Cascadia Code, Consolas" FontSize="11"/>
                                     </DataTemplate>
@@ -568,7 +576,7 @@
                                                    HorizontalAlignment="Right" FontSize="11"
                                                    FontFamily="Cascadia Code, Consolas"
                                                    Foreground="{Binding LatencyUs, Converter={StaticResource LatencyBrush}}">
-                                            <Run Text="{Binding LatencyUs, StringFormat={}{0:F0}, Mode=OneWay}"/><Run Text="μs"/>
+                                            <Run Text="{Binding LatencyMs, StringFormat={}{0:F1}, Mode=OneWay}"/><Run Text="ms"/>
                                         </TextBlock>
                                     </Grid>
                                 </DataTemplate>

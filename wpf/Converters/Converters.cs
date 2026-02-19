@@ -86,6 +86,15 @@ public class InverseBoolToVisibilityConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+public class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type t, object p, CultureInfo c)
+        => value is bool b ? !b : value;
+
+    public object ConvertBack(object value, Type t, object p, CultureInfo c)
+        => value is bool b ? !b : value;
+}
+
 /// <summary>Scales microseconds to bar width (max 5000μs → 400px).</summary>
 public class LatencyToWidthConverter : IValueConverter
 {

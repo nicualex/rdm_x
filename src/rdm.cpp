@@ -1,6 +1,7 @@
 // RDM protocol layer - Implementation
 #include "rdm.h"
 #include "enttec_pro.h"
+#include "peperoni_rodin.h"
 #include <algorithm>
 #include <cstdarg>
 #include <cstdio>
@@ -150,7 +151,8 @@ RDMResponse RDMGetCommand(EnttecPro &pro, uint64_t srcUID, uint64_t destUID,
 }
 
 // ============================================================================
-// Discovery helpers
+// Templated Discovery helpers — work with any driver class that provides
+// SendRDM(), ReceiveRDM(), SendRDMDiscovery(), and Purge()
 // ============================================================================
 
 // Debug helper — forwards to OutputDebugStringA so DebugView can catch it.
@@ -164,7 +166,8 @@ static void DiscLog(const char *fmt, ...) {
 }
 
 // Send DISC_MUTE to a specific UID.  Returns true if we got a response (ACK).
-static bool SendDiscMute(EnttecPro &pro, uint64_t srcUID, uint64_t uid) {
+template <typename Driver>
+static bool SendDiscMute(Driver &pro, uint64_t srcUID, uint64_t uid) {
   DiscLog("[RDM] DISC_MUTE -> %s\n", UIDToString(uid).c_str());
   auto pkt = BuildRDMPacket(uid, srcUID, s_transNum++, 1, 0, 0,
                             RDM_CC_DISCOVERY, PID_DISC_MUTE);
@@ -181,7 +184,8 @@ static bool SendDiscMute(EnttecPro &pro, uint64_t srcUID, uint64_t uid) {
 }
 
 // Send DISC_UN_MUTE broadcast.  No response expected.
-static void SendDiscUnMute(EnttecPro &pro, uint64_t srcUID) {
+template <typename Driver>
+static void SendDiscUnMute(Driver &pro, uint64_t srcUID) {
   DiscLog("[RDM] DISC_UN_MUTE (broadcast)\n");
   auto pkt = BuildRDMPacket(RDM_BROADCAST_UID, srcUID, s_transNum++, 1, 0, 0,
                             RDM_CC_DISCOVERY, PID_DISC_UN_MUTE);
@@ -196,7 +200,8 @@ static void SendDiscUnMute(EnttecPro &pro, uint64_t srcUID) {
 //  -1 = no response (no devices in range)
 //   0 = collision (multiple devices or garbled response)
 //   1 = single device, UID written to *foundUID
-static int TryDiscBranch(EnttecPro &pro, uint64_t srcUID, uint64_t lower,
+template <typename Driver>
+static int TryDiscBranch(Driver &pro, uint64_t srcUID, uint64_t lower,
                          uint64_t upper, uint64_t *foundUID) {
   uint8_t pd[12];
   PackUID(pd, lower);
@@ -237,18 +242,13 @@ static int TryDiscBranch(EnttecPro &pro, uint64_t srcUID, uint64_t lower,
     DiscLog("[RDM]   BRANCH rxdata: %s\n", hexDump);
   }
 
-  // The Enttec Pro widget returns the raw discovery response bytes
-  // from the bus (everything after the DMX start code).
-  //
+  // The discovery response contains raw bytes from the bus.
   // Per E1.20 Section 7.5.3, the discovery response is encoded:
   //   - 0 to 7 preamble bytes (0xFE)
   //   - 1 preamble separator byte (0xAA)
   //   - 12 encoded UID bytes (6 pairs: each UID byte sent as
   //     byte|0xAA then byte|0x55)
   //   - 4 encoded checksum bytes (same encoding, 2-byte checksum)
-  //
-  // The widget's status byte might indicate the response type.
-  // statusByte == 0 typically means a valid response was received.
 
   // Strip preamble (0xFE bytes)
   int offset = 0;
@@ -296,7 +296,8 @@ static int TryDiscBranch(EnttecPro &pro, uint64_t srcUID, uint64_t lower,
 }
 
 // Recursive binary tree discovery
-static void DiscoverBranch(EnttecPro &pro, uint64_t srcUID, uint64_t lower,
+template <typename Driver>
+static void DiscoverBranch(Driver &pro, uint64_t srcUID, uint64_t lower,
                            uint64_t upper, std::vector<uint64_t> &found,
                            int depth = 0) {
   // Limit recursion depth to prevent stack overflow
@@ -327,8 +328,9 @@ static void DiscoverBranch(EnttecPro &pro, uint64_t srcUID, uint64_t lower,
   }
 }
 
-// Public discovery entry point
-std::vector<uint64_t> RDMDiscovery(EnttecPro &pro, uint64_t srcUID) {
+// ── Public discovery entry points ─────────────────────────────────────────
+template <typename Driver>
+static std::vector<uint64_t> RDMDiscoveryImpl(Driver &pro, uint64_t srcUID) {
   std::vector<uint64_t> found;
   DiscLog("[RDM] ===== Starting RDM Discovery (src=%s) =====\n",
           UIDToString(srcUID).c_str());
@@ -345,4 +347,13 @@ std::vector<uint64_t> RDMDiscovery(EnttecPro &pro, uint64_t srcUID) {
   DiscLog("[RDM] ===== Discovery complete: found %d device(s) =====\n",
           (int)found.size());
   return found;
+}
+
+// Explicit instantiations for both driver types
+std::vector<uint64_t> RDMDiscovery(EnttecPro &pro, uint64_t srcUID) {
+  return RDMDiscoveryImpl(pro, srcUID);
+}
+
+std::vector<uint64_t> RDMDiscovery(PeperoniRodin &pro, uint64_t srcUID) {
+  return RDMDiscoveryImpl(pro, srcUID);
 }

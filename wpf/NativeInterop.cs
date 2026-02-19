@@ -10,6 +10,16 @@ public static class NativeInterop
 {
     private const string Dll = "rdm_x_core.dll";
 
+    // ── Driver Selection ─────────────────────────────────────────────────
+    public const int DRIVER_ENTTEC   = 0;
+    public const int DRIVER_PEPERONI = 1;
+
+    [DllImport(Dll)] public static extern void RDX_SetDriver(int driverType);
+    [DllImport(Dll)] public static extern int  RDX_GetDriver();
+    [DllImport(Dll)] private static extern IntPtr RDX_GetDriverName(int driverType);
+    public static string GetDriverName(int driverType)
+        => Marshal.PtrToStringAnsi(RDX_GetDriverName(driverType)) ?? "Unknown";
+
     // ── Device ──────────────────────────────────────────────────────────
     [DllImport(Dll)] public static extern int  RDX_ListDevices();
     [DllImport(Dll)] public static extern bool RDX_Open(int deviceIndex);

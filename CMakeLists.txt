@@ -15,6 +15,7 @@ set_target_properties(ftd2xx PROPERTIES
 # ── Core shared library (DLL) ───────────────────────────────────────────
 set(CORE_SOURCES
     src/enttec_pro.cpp
+    src/peperoni_rodin.cpp
     src/rdm.cpp
     src/parameter_loader.cpp
     src/validator.cpp

@@ -17,6 +17,14 @@
 extern "C" {
 #endif
 
+// ── Driver selection ────────────────────────────────────────────────────
+#define RDX_DRIVER_ENTTEC 0
+#define RDX_DRIVER_PEPERONI 1
+
+RDX_API void RDX_SetDriver(int driverType); // call before Open
+RDX_API int RDX_GetDriver();                // current driver type
+RDX_API const char *RDX_GetDriverName(int driverType);
+
 // ── Device management ───────────────────────────────────────────────────
 RDX_API int RDX_ListDevices();
 RDX_API bool RDX_Open(int deviceIndex);

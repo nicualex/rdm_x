@@ -21,6 +21,12 @@ public class DeviceItem
     public override string ToString() => Label;
 }
 
+public class DriverType
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public override string ToString() => Name;
+}
 public class DiscoveredUID
 {
     public ulong UID { get; set; }
@@ -37,6 +43,8 @@ public partial class PidResult : ObservableObject
     [ObservableProperty] private int _status = -1;   // -1 = not queried
     [ObservableProperty] private string _value = "";
     [ObservableProperty] private long _latencyUs;
+    public double LatencyMs => _latencyUs / 1000.0;
+    partial void OnLatencyUsChanged(long value) => OnPropertyChanged(nameof(LatencyMs));
     [ObservableProperty] private bool _checksumValid;
     [ObservableProperty] private string _rawHex = "";
     [ObservableProperty] private int _nackReason;
@@ -63,6 +71,23 @@ public partial class DmxChannel : ObservableObject
 // ── Main ViewModel ──────────────────────────────────────────────────────
 public partial class MainViewModel : ObservableObject
 {
+    // ── Driver selection ────────────────────────────────────────────────
+    [ObservableProperty] private int _selectedDriverIndex;
+    public List<DriverType> DriverTypes { get; } = new()
+    {
+        new DriverType { Id = NativeInterop.DRIVER_ENTTEC, Name = "Enttec USB DMX PRO" },
+        new DriverType { Id = NativeInterop.DRIVER_PEPERONI, Name = "Peperoni Rodin 1" },
+    };
+
+    partial void OnSelectedDriverIndexChanged(int value)
+    {
+        if (value >= 0 && value < DriverTypes.Count)
+        {
+            NativeInterop.RDX_SetDriver(DriverTypes[value].Id);
+            RefreshDevices();
+        }
+    }
+
     // ── Connection state ────────────────────────────────────────────────
     [ObservableProperty] private bool _isConnected;
     [ObservableProperty] private string _firmwareVersion = "";

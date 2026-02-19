@@ -92,6 +92,19 @@ if (-not (Test-Path $AppExe)) {
 }
 Write-Host "  -> WPF app published successfully" -ForegroundColor Green
 
+# Copy native DLLs into publish directory
+Copy-Item $NativeDll -Destination $PublishDir -Force
+Write-Host "  -> rdm_x_core.dll copied to publish dir" -ForegroundColor Green
+
+$PeperoniDll = Join-Path $Root "thirdparty\peperoni\vusbdmx.dll"
+if (Test-Path $PeperoniDll) {
+    Copy-Item $PeperoniDll -Destination $PublishDir -Force
+    Write-Host "  -> vusbdmx.dll copied to publish dir" -ForegroundColor Green
+}
+else {
+    Write-Warning "vusbdmx.dll not found at $PeperoniDll - Peperoni driver will not work"
+}
+
 # ── 3. Compile Inno Setup installer ──────────────────────────
 Write-Host "[3/3] Compiling Inno Setup installer..." -ForegroundColor Yellow
 

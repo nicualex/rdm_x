@@ -5,6 +5,7 @@
 #include "rdm_x_api.h"
 #include "enttec_pro.h"
 #include "parameter_loader.h"
+#include "peperoni_rodin.h"
 #include "rdm.h"
 #include "validator.h"
 #include <windows.h>
@@ -15,17 +16,22 @@
 #include <vector>
 
 // ── Globals ─────────────────────────────────────────────────────────────
-static EnttecPro g_pro;
+static EnttecPro g_enttec;
+static PeperoniRodin g_peperoni;
+static int g_driverType = RDX_DRIVER_ENTTEC;
 static std::vector<RDMParameter> g_params;
 static std::vector<uint64_t> g_discoveredUIDs;
 static std::string g_fwString;
 static LARGE_INTEGER g_perfFreq;
 static LARGE_INTEGER g_dllLoadTime;
 
-// Source UID for RDM commands — built from Enttec ESTA ID + widget serial
-// (matches ofxDmxUsbPro: uid = 0x454E + serial_number)
+// Source UID for RDM commands
 static uint64_t GetControllerUID() {
-  uint32_t sn = g_pro.GetSerialNumber();
+  if (g_driverType == RDX_DRIVER_PEPERONI) {
+    uint32_t sn = g_peperoni.GetSerialNumber();
+    return (0x7065ULL << 32) | sn;
+  }
+  uint32_t sn = g_enttec.GetSerialNumber();
   return (0x454EULL << 32) | sn;
 }
 
@@ -63,30 +69,75 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// Driver selection
+// ═══════════════════════════════════════════════════════════════════════
+
+RDX_API void RDX_SetDriver(int driverType) { g_driverType = driverType; }
+
+RDX_API int RDX_GetDriver() { return g_driverType; }
+
+RDX_API const char *RDX_GetDriverName(int driverType) {
+  switch (driverType) {
+  case RDX_DRIVER_ENTTEC:
+    return "Enttec USB DMX PRO";
+  case RDX_DRIVER_PEPERONI:
+    return "Peperoni Rodin 1";
+  default:
+    return "Unknown";
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // Device management
 // ═══════════════════════════════════════════════════════════════════════
 
-RDX_API int RDX_ListDevices() { return EnttecPro::ListDevices(); }
+RDX_API int RDX_ListDevices() {
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    return g_peperoni.ListDevices();
+  return EnttecPro::ListDevices();
+}
 
-RDX_API bool RDX_Open(int deviceIndex) { return g_pro.Open(deviceIndex); }
+RDX_API bool RDX_Open(int deviceIndex) {
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    return g_peperoni.Open(deviceIndex);
+  return g_enttec.Open(deviceIndex);
+}
 
-RDX_API void RDX_Close() { g_pro.Close(); }
+RDX_API void RDX_Close() {
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    g_peperoni.Close();
+  else
+    g_enttec.Close();
+}
 
-RDX_API bool RDX_IsOpen() { return g_pro.IsOpen(); }
+RDX_API bool RDX_IsOpen() {
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    return g_peperoni.IsOpen();
+  return g_enttec.IsOpen();
+}
 
 RDX_API const char *RDX_FirmwareString() {
-  g_fwString = g_pro.GetFirmwareString();
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    g_fwString = g_peperoni.GetFirmwareString();
+  else
+    g_fwString = g_enttec.GetFirmwareString();
   return g_fwString.c_str();
 }
 
-RDX_API uint32_t RDX_SerialNumber() { return g_pro.GetSerialNumber(); }
+RDX_API uint32_t RDX_SerialNumber() {
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    return g_peperoni.GetSerialNumber();
+  return g_enttec.GetSerialNumber();
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // DMX
 // ═══════════════════════════════════════════════════════════════════════
 
 RDX_API bool RDX_SendDMX(const uint8_t *data, int len) {
-  return g_pro.SendDMX(data, len);
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    return g_peperoni.SendDMX(data, len);
+  return g_enttec.SendDMX(data, len);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -94,7 +145,10 @@ RDX_API bool RDX_SendDMX(const uint8_t *data, int len) {
 // ═══════════════════════════════════════════════════════════════════════
 
 RDX_API int RDX_Discover() {
-  g_discoveredUIDs = RDMDiscovery(g_pro, GetControllerUID());
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    g_discoveredUIDs = RDMDiscovery(g_peperoni, GetControllerUID());
+  else
+    g_discoveredUIDs = RDMDiscovery(g_enttec, GetControllerUID());
   return static_cast<int>(g_discoveredUIDs.size());
 }
 
@@ -119,7 +173,9 @@ static bool SendRDMCommand(uint64_t destUID, uint16_t pid, uint8_t commandClass,
     return false;
   memset(out, 0, sizeof(RDX_Response));
 
-  if (!g_pro.IsOpen()) {
+  bool devOpen = (g_driverType == RDX_DRIVER_PEPERONI) ? g_peperoni.IsOpen()
+                                                       : g_enttec.IsOpen();
+  if (!devOpen) {
     out->status = RDX_STATUS_TIMEOUT;
     DiscLog("[RDM CMD] ERROR: device not open\n");
     return false;
@@ -136,15 +192,24 @@ static bool SendRDMCommand(uint64_t destUID, uint16_t pid, uint8_t commandClass,
           (unsigned)(destUID & 0xFFFFFFFF), (int)pkt.size());
 
   // ── Quiet period: purge RX buffer (via mutex-guarded Purge) ──
-  g_pro.Purge();
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    g_peperoni.Purge();
+  else
+    g_enttec.Purge();
   Sleep(20);
 
   // Measure TX→RX latency with high-precision timer
   LARGE_INTEGER txTime, rxTime;
   QueryPerformanceCounter(&txTime);
 
-  // Send via Label 7 WITH the CC start code (per Enttec API spec)
-  if (!g_pro.SendRDM(pkt.data(), static_cast<int>(pkt.size()))) {
+  // Send via the active driver
+  bool sendOk;
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    sendOk = g_peperoni.SendRDM(pkt.data(), static_cast<int>(pkt.size()));
+  else
+    sendOk = g_enttec.SendRDM(pkt.data(), static_cast<int>(pkt.size()));
+
+  if (!sendOk) {
     out->status = RDX_STATUS_TIMEOUT;
     DiscLog("[RDM CMD] SendRDM FAILED\n");
     return false;
@@ -152,13 +217,18 @@ static bool SendRDMCommand(uint64_t destUID, uint16_t pid, uint8_t commandClass,
 
   DiscLog("[RDM CMD] Sent, waiting for Label 5 response...\n");
 
-  // Wait for widget to process: send on wire, capture response, forward it
-  Sleep(50);
+  // Wait for widget to process (shorter for Peperoni since it blocks)
+  if (g_driverType != RDX_DRIVER_PEPERONI)
+    Sleep(50);
 
-  // Read response (ReceiveRDM looks for Label 5)
+  // Read response
   uint8_t rxBuf[512];
   uint8_t statusByte = 0;
-  int rxLen = g_pro.ReceiveRDM(rxBuf, sizeof(rxBuf), statusByte);
+  int rxLen;
+  if (g_driverType == RDX_DRIVER_PEPERONI)
+    rxLen = g_peperoni.ReceiveRDM(rxBuf, sizeof(rxBuf), statusByte);
+  else
+    rxLen = g_enttec.ReceiveRDM(rxBuf, sizeof(rxBuf), statusByte);
 
   QueryPerformanceCounter(&rxTime);
 
@@ -299,13 +369,29 @@ RDX_API bool RDX_GetParameterInfo(int index, uint16_t *pid, char *name,
 
 RDX_API void RDX_SetLogCallback(RDX_LogCallback cb) {
   g_logCb = cb;
-  g_pro.SetLogCallback([](bool tx, const uint8_t *data, int len) {
+
+  // Set log callback on Enttec
+  g_enttec.SetLogCallback([](bool tx, const uint8_t *data, int len) {
     if (!g_logCb)
       return;
-    // Skip DMX TX packets (Label 6) — they flood the log at 25fps
     if (tx && len >= 2 && data[1] == 0x06)
       return;
-    // Convert to hex string
+    std::string hex;
+    hex.reserve(len * 3 + 8);
+    for (int i = 0; i < len && i < 128; ++i) {
+      char buf[4];
+      snprintf(buf, sizeof(buf), "%02X ", data[i]);
+      hex += buf;
+    }
+    if (len > 128)
+      hex += "...";
+    g_logCb(tx, hex.c_str(), NowUs());
+  });
+
+  // Set log callback on Peperoni
+  g_peperoni.SetLogCallback([](bool tx, const uint8_t *data, int len) {
+    if (!g_logCb)
+      return;
     std::string hex;
     hex.reserve(len * 3 + 8);
     for (int i = 0; i < len && i < 128; ++i) {

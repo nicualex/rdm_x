@@ -6,7 +6,7 @@
 ; ──────────────────────────────────────────────────────────────
 
 #define MyAppName      "RDM_X"
-#define MyAppVersion   "1.2.0"
+#define MyAppVersion   "1.3.0"
 #define MyAppPublisher "CK"
 #define MyAppExeName   "RDM_X.exe"
 
@@ -52,6 +52,7 @@ Source: "{#PublishDir}\RDM_X.runtimeconfig.json";    DestDir: "{app}"; Flags: ig
 Source: "{#PublishDir}\rdm_x_core.dll";              DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\CommunityToolkit.Mvvm.dll";   DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\Vaya_RDM_map.csv";            DestDir: "{app}"; Flags: ignoreversion
+Source: "{#PublishDir}\vusbdmx.dll";                 DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"
