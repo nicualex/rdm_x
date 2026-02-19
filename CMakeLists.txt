@@ -35,6 +35,11 @@ target_link_libraries(rdm_x_core PRIVATE
 
 target_compile_definitions(rdm_x_core PRIVATE RDX_EXPORTS)
 
+# Use static runtime (MT/MTd) to avoid VC++ Redist dependency
+if(MSVC)
+    set_property(TARGET rdm_x_core PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # Copy CSV data file next to DLL
 configure_file(
     "${CMAKE_SOURCE_DIR}/docs/Vaya_RDM_map.csv"
