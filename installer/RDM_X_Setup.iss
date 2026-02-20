@@ -6,7 +6,7 @@
 ; ──────────────────────────────────────────────────────────────
 
 #define MyAppName      "RDM_X"
-#define MyAppVersion   "1.3.1"
+#define MyAppVersion   "1.3.2"
 #define MyAppPublisher "CK"
 #define MyAppExeName   "RDM_X.exe"
 
@@ -54,6 +54,7 @@ Source: "{#PublishDir}\CommunityToolkit.Mvvm.dll";   DestDir: "{app}"; Flags: ig
 Source: "{#PublishDir}\Vaya_RDM_map.csv";            DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\vusbdmx.dll";                 DestDir: "{app}"; Flags: ignoreversion
 Source: "{#PublishDir}\ftd2xx.dll";                  DestDir: "{app}"; Flags: ignoreversion
+Source: "..\thirdparty\peperoni\driver\*";           DestDir: "{app}\driver"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"
@@ -61,6 +62,8 @@ Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+Filename: "{app}\driver\dpinst64.exe"; Parameters: "/q /sa /se"; Flags: waituntilterminated; Check: IsWin64; StatusMsg: "Installing Peperoni USB DMX driver..."
+Filename: "{app}\driver\dpinst32.exe"; Parameters: "/q /sa /se"; Flags: waituntilterminated; Check: not IsWin64; StatusMsg: "Installing Peperoni USB DMX driver..."
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]

@@ -1,0 +1,101 @@
+; Installation file for Peperoni/Lighting-Solutions USB DMX512 interface driver
+; Copyright (C) 2003-2006 by Peperoni/Lighting-Solutions
+; All rights reserved
+
+[Version]
+Signature                = $Windows NT$
+Class                    = PhilipsUSBDMXInterfaceClass
+ClassGuid                = {CD49560D-9064-4c05-9A72-4FE931B7EC3D}
+Provider                 = %MFGNAME%
+CatalogFile              = vusbdmx.cat
+DriverPackageType        = PlugAndPlay
+DriverPackageDisplayName = %DESC%
+DriverVer                = 11/27/2014,5.0.4.0
+
+[DestinationDirs]
+DefaultDestDir     = 11		; %SystemRoot%\system32
+DriverCopyFiles    = 12		; %SystemRoot%\system32\drivers
+LibraryCopyFiles   = 16425
+Library64CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall]
+AddReg=ClassAddReg
+
+[ClassInstall32]
+AddReg=ClassAddReg
+
+[ClassAddReg]
+HKR,,,,"%CLASSNAME%"
+HKR,,Icon,,-20
+HKR,,SilentInstall,,1
+
+; ================= Device section =====================
+[Manufacturer]
+%MFGNAME%=DeviceList, NTx86, NTamd64
+
+[DeviceList]
+%DESCRIPTION30%=DriverInstall,USB\VID_0CE1&PID_0030
+
+[DeviceList.NTx86]
+%DESCRIPTION30%=DriverInstall,USB\VID_0CE1&PID_0030
+
+[DeviceList.NTamd64]
+%DESCRIPTION30%=DriverInstall,USB\VID_0CE1&PID_0030
+
+; ============ Win 2k and later section ================
+
+[DriverInstall.NT]
+CopyFiles=DriverCopyFiles,LibraryCopyFiles
+
+[DriverInstall.NT.Services]
+AddService=VUSBDMX,2,DriverService
+
+[DriverInstall64.NT]
+CopyFiles=DriverCopyFiles,LibraryCopyFiles,Library64CopyFiles
+
+[DriverInstall64.NT.Services]
+AddService=USBDMX,2,DriverService
+
+[DriverCopyFiles]
+vusbdmx.sys,,,2
+
+[LibraryCopyFiles]
+vusbdmx.dll,,,2
+
+[Library64CopyFiles]
+vusbdmx64.dll,,,2
+
+; ================= Service section =====================
+
+[DriverService]
+DisplayName   = %SVCDESC%
+ServiceType   = 1               ; SERVICE_KERNEL_DRIVER
+StartType     = 3               ; SERVICE_DEMAND_START 
+ErrorControl  = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary = %12%\vusbdmx.sys
+
+; ================= Source section =====================
+
+[SourceDisksFiles]
+vusbdmx.sys=1
+vusbdmx.dll=1
+
+[SourceDisksFiles.amd64]
+vusbdmx.sys=2
+vusbdmx.dll=1
+vusbdmx64.dll=2
+
+[SourceDisksNames]
+1 = %INSTDISK%,,,\x86
+2 = %INSTDISK%,,,\amd64
+
+; ================= String section =====================
+[Strings]
+MFGNAME       = "Philips"
+CLASSNAME     = "Philips USBDMX Interfaces"
+DESC          = "Rodin1 driver"
+INSTDISK      = "Philips USBDMX Installation Disc"
+SVCDESC       = "Philips USBDMX driver"
+DESCRIPTION30 = "Philips Rodin1"
