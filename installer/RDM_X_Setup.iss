@@ -6,7 +6,7 @@
 ; ──────────────────────────────────────────────────────────────
 
 #define MyAppName      "RDM_X"
-#define MyAppVersion   "1.3.3"
+#define MyAppVersion   "1.4.0"
 #define MyAppPublisher "CK"
 #define MyAppExeName   "RDM_X.exe"
 
@@ -45,15 +45,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Main application files from dotnet publish output
-Source: "{#PublishDir}\RDM_X.exe";                   DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\RDM_X.dll";                   DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\RDM_X.deps.json";             DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\RDM_X.runtimeconfig.json";    DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\rdm_x_core.dll";              DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\CommunityToolkit.Mvvm.dll";   DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\Vaya_RDM_map.csv";            DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\vusbdmx.dll";                 DestDir: "{app}"; Flags: ignoreversion
-Source: "{#PublishDir}\ftd2xx.dll";                  DestDir: "{app}"; Flags: ignoreversion
+Source: "{#PublishDir}\*";                           DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\thirdparty\peperoni\driver\*";           DestDir: "{app}\driver"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
@@ -66,38 +58,5 @@ Filename: "{app}\driver\dpinst64.exe"; Parameters: "/q /sa /se"; Flags: waitunti
 Filename: "{app}\driver\dpinst32.exe"; Parameters: "/q /sa /se"; Flags: waituntilterminated; Check: not IsWin64; StatusMsg: "Installing Peperoni USB DMX driver..."
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
-[Code]
-{ .NET 8 Desktop Runtime detection }
-function IsDotNet8DesktopInstalled: Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := False;
-  if Exec('dotnet', '--list-runtimes', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-  begin
-    Result := RegKeyExists(HKLM,
-      'SOFTWARE\dotnet\Setup\InstalledVersions\x86\sharedfx\Microsoft.WindowsDesktop.App');
-  end;
-end;
 
-function InitializeSetup: Boolean;
-var
-  Msg: String;
-begin
-  Result := True;
-  if not IsDotNet8DesktopInstalled then
-  begin
-    Msg := '.NET 8 Desktop Runtime (x86) does not appear to be installed.' + Chr(13) + Chr(10) +
-           Chr(13) + Chr(10) +
-           'RDM_X requires the .NET 8 Desktop Runtime (x86) to run.' + Chr(13) + Chr(10) +
-           'You can download it from:' + Chr(13) + Chr(10) +
-           'https://dotnet.microsoft.com/download/dotnet/8.0' + Chr(13) + Chr(10) +
-           Chr(13) + Chr(10) +
-           'Do you want to continue the installation anyway?';
-    if MsgBox(Msg, mbConfirmation, MB_YESNO) = IDNO then
-    begin
-      Result := False;
-    end;
-  end;
-end;
 

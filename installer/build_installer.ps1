@@ -77,7 +77,7 @@ Write-Host "[2/3] Publishing WPF application..." -ForegroundColor Yellow
 $WpfDir = Join-Path $Root "wpf"
 Push-Location $WpfDir
 try {
-    dotnet publish -c $Configuration -r win-x86 --no-self-contained -o "bin\$Configuration\net8.0-windows\publish"
+    dotnet publish -c $Configuration -r win-x86 --self-contained true -o "bin\$Configuration\net8.0-windows\publish"
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 }
 finally {
