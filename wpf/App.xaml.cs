@@ -24,6 +24,35 @@ public partial class App : Application
         catch { }
     }
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        try
+        {
+            // Dummy call to force native DLL loading before XAML parsing
+            NativeInterop.RDX_GetDriver();
+        }
+        catch (DllNotFoundException ex)
+        {
+            MessageBox.Show(
+                "RDM_X requires hardware driver libraries to run, but they could not be found.\n\n" +
+                "Please ensure all required files (rdm_x_core.dll, ftd2xx.dll, vusbdmx.dll) " +
+                "are present in the application folder.\n\n" +
+                $"Details: {ex.Message}",
+                "RDM_X - Missing Dependencies",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            
+            Shutdown(1);
+            return;
+        }
+
+        // If DLL loaded successfully, launch the main window
+        var mainWindow = new MainWindow();
+        mainWindow.Show();
+    }
+
     private static void LogException(Exception? ex, string source)
     {
         if (ex == null) return;

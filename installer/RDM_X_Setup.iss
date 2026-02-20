@@ -6,7 +6,7 @@
 ; ──────────────────────────────────────────────────────────────
 
 #define MyAppName      "RDM_X"
-#define MyAppVersion   "1.3.2"
+#define MyAppVersion   "1.3.3"
 #define MyAppPublisher "CK"
 #define MyAppExeName   "RDM_X.exe"
 
