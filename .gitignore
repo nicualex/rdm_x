@@ -21,3 +21,6 @@ Desktop.ini
  
 # Installer output
 installer/output/
+
+# Claude Code local memory
+.claude/

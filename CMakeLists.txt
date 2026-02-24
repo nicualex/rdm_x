@@ -46,3 +46,10 @@ configure_file(
     "${CMAKE_BINARY_DIR}/Vaya_RDM_map.csv"
     COPYONLY
 )
+
+# ── Unit tests (opt-in) ─────────────────────────────────────────────────
+option(RDM_BUILD_TESTS "Build unit tests" OFF)
+if(RDM_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests/cpp)
+endif()

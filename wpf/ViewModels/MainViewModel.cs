@@ -874,13 +874,7 @@ public partial class MainViewModel : ObservableObject
             }
             else if (resp.Status == NativeInterop.STATUS_ACK)
             {
-                // ACK but no data — provide context for known cases
-                pid.Value = pid.Pid switch
-                {
-                    0x8070 => "ACK ✓ (deprecated — use 0x0060 Device Info instead)",
-                    0x80C0 => "ACK ✓ (deprecated — use 0x00C0 or 0x0060 instead)",
-                    _ => "ACK ✓ (empty response)"
-                };
+                pid.Value = "ACK ✓ (empty response)";
             }
             else if (resp.Status == NativeInterop.STATUS_NACK)
             {
