@@ -42,7 +42,7 @@ endif()
 
 # Copy CSV data file next to DLL
 configure_file(
-    "${CMAKE_SOURCE_DIR}/docs/Vaya_RDM_map.csv"
+    "${CMAKE_SOURCE_DIR}/docs/CK_Vaya_RDM_map.csv"
     "${CMAKE_BINARY_DIR}/Vaya_RDM_map.csv"
     COPYONLY
 )

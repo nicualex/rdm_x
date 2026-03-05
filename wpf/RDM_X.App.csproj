@@ -19,7 +19,7 @@
   <!-- Copy native DLL to output -->
   <ItemGroup>
     <None Include="..\build\Release\rdm_x_core.dll" CopyToOutputDirectory="PreserveNewest" Link="rdm_x_core.dll" />
-    <None Include="..\docs\Vaya_RDM_map.csv" CopyToOutputDirectory="PreserveNewest" Link="Vaya_RDM_map.csv" />
+    <None Include="..\docs\CK_Vaya_RDM_map.csv" CopyToOutputDirectory="PreserveNewest" Link="Vaya_RDM_map.csv" />
   </ItemGroup>
 
 </Project>
